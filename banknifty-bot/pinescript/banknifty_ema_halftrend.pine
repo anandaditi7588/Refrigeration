@@ -1,0 +1,150 @@
+//@version=5
+strategy("BankNifty 25EMA + Trend-Flip Signal (Webhook)", overlay=true,
+     default_qty_type=strategy.percent_of_equity, default_qty_value=0,
+     calc_on_every_tick=true)
+
+// ============================================================================
+// NOTE ON THE TREND INDICATOR
+// TradingView's built-in library has no native "HalfTrend" function — the
+// popular community HalfTrend script is a separate published indicator with
+// its own license, so it is not reproduced here. Below is an original
+// ATR-channel trend-flip implementation that follows the same general idea
+// (a trailing high/low channel that flips direction). If you specifically
+// need the published "HalfTrend" indicator's exact values, add it to the
+// chart separately and wire this strategy's inputs to it via an external
+// input source instead of the trendUp() function below.
+// ============================================================================
+
+emaLen        = input.int(25, "EMA Length")
+atrLen        = input.int(14, "ATR Length (trend channel)")
+atrMult       = input.float(2.0, "ATR Multiplier (trend channel)")
+retracePct    = input.float(0.75, "Delayed-entry retracement %", minval=0.1, maxval=1.0,
+     tooltip="Fraction of the PREVIOUS candle's high-low range that price must retrace into before the delayed Call/Put fires.")
+secondsBeforeClose = input.int(10, "Fire alert N seconds before candle close")
+
+ema25 = ta.ema(close, emaLen)
+
+// --- Original trend-flip channel (HalfTrend-style behavior) ---
+atrVal = ta.atr(atrLen)
+var float trendHigh = na
+var float trendLow  = na
+var int   trend     = 0   // 1 = up/green, -1 = down/red
+
+trendHigh := na(trendHigh) ? high : math.max(trendHigh, high)
+trendLow  := na(trendLow)  ? low  : math.min(trendLow, low)
+
+if trend >= 0
+    trendLow := math.max(trendLow, low)
+    if close < trendHigh - atrVal * atrMult
+        trend := -1
+        trendHigh := high
+        trendLow := low
+else
+    trendHigh := math.min(trendHigh, high)
+    if close > trendLow + atrVal * atrMult
+        trend := 1
+        trendHigh := high
+        trendLow := low
+
+trend := trend == 0 ? (close > ema25 ? 1 : -1) : trend
+isGreen = trend == 1
+isRed   = trend == -1
+
+// Transition detection — only true on the single flip bar, not every green/red bar
+flippedToGreen = isGreen and isRed[1]
+flippedToRed   = isRed and isGreen[1]
+
+aboveEma = close > ema25
+belowEma = close < ema25
+
+// ============================================================================
+// CONDITION LOGIC (per spec section 4)
+// ============================================================================
+// Condition 1: Immediate CALL  — close > EMA25 AND Red->Green flip, same candle
+cond1_immediateCall = aboveEma and flippedToGreen
+
+// Condition 2: Immediate PUT   — close < EMA25 AND Green->Red flip, same candle
+cond2_immediatePut  = belowEma and flippedToRed
+
+// Condition 3: Delayed CALL setup — close < EMA25 AND Red->Green flip (don't trade this bar)
+cond3_setup = belowEma and flippedToGreen
+
+// Condition 4: Delayed PUT setup — close > EMA25 AND Green->Red flip (don't trade this bar)
+// (Resolved open point #1: Condition 4 ends in a PUT, matching the bearish setup described.)
+cond4_setup = aboveEma and flippedToRed
+
+// --- Delayed confirmation state machine ---
+var bool pendingDelayedCall = false
+var bool pendingDelayedPut  = false
+var float setupHigh = na
+var float setupLow  = na
+
+if cond3_setup
+    pendingDelayedCall := true
+    pendingDelayedPut  := false
+    setupHigh := high
+    setupLow  := low
+
+if cond4_setup
+    pendingDelayedPut  := true
+    pendingDelayedCall := false
+    setupHigh := high
+    setupLow  := low
+
+setupRange = setupHigh - setupLow
+// Retracement reference (resolved open point #4): 75% of the PREVIOUS (setup)
+// candle's full high-low range, measured from that candle's HIGH downward for
+// the delayed CALL (price must fall back down through 75% of the range), and
+// from that candle's LOW upward for the delayed PUT (price must rise back up
+// through 75% of the range). Adjust the two level formulas below if your
+// intended reference point differs.
+delayedCallLevel = setupHigh - retracePct * setupRange   // price must trade <= this
+delayedPutLevel  = setupLow  + retracePct * setupRange   // price must trade >= this
+
+cond3_trigger = pendingDelayedCall and low  <= delayedCallLevel
+cond4_trigger = pendingDelayedPut  and high >= delayedPutLevel
+
+if cond3_trigger
+    pendingDelayedCall := false
+if cond4_trigger
+    pendingDelayedPut := false
+
+// Clear a pending setup if a fresh opposite/immediate signal supersedes it
+if cond1_immediateCall or cond2_immediatePut
+    pendingDelayedCall := false
+    pendingDelayedPut  := false
+
+// ============================================================================
+// FIRE ~N SECONDS BEFORE CANDLE CLOSE, REALTIME BARS ONLY
+// ============================================================================
+msRemaining = time_close - timenow
+fireWindow  = barstate.isrealtime and msRemaining <= secondsBeforeClose * 1000 and msRemaining > 0
+
+var bool alertedThisBar = false
+if barstate.isnew
+    alertedThisBar := false
+
+signalType = "WAIT"
+if fireWindow and not alertedThisBar
+    if cond1_immediateCall
+        signalType := "CALL"
+    else if cond2_immediatePut
+        signalType := "PUT"
+    else if cond3_trigger
+        signalType := "CALL"
+    else if cond4_trigger
+        signalType := "PUT"
+
+    if signalType != "WAIT"
+        payload = '{"signal":"' + signalType + '","price":' + str.tostring(close) +
+             ',"symbol":"BANKNIFTY","timeframe":"15","timestamp":"' + str.tostring(timenow) + '"}'
+        alert(payload, alert.freq_once_per_bar)
+        alertedThisBar := true
+
+// Plots for visual confirmation on the chart
+plot(ema25, "25 EMA", color=color.orange, linewidth=2)
+plotshape(cond1_immediateCall, title="Immediate Call", style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small)
+plotshape(cond2_immediatePut, title="Immediate Put", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small)
+plotshape(cond3_trigger, title="Delayed Call Fired", style=shape.triangleup, location=location.belowbar, color=color.lime, size=size.tiny)
+plotshape(cond4_trigger, title="Delayed Put Fired", style=shape.triangledown, location=location.abovebar, color=color.maroon, size=size.tiny)
+bgcolor(pendingDelayedCall ? color.new(color.green, 90) : pendingDelayedPut ? color.new(color.red, 90) : na)

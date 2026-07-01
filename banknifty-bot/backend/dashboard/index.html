@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BankNifty Bot — Ledger</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0b0f14;
+    --panel:#11171f;
+    --line:#1f2a36;
+    --ink:#dbe6ee;
+    --dim:#5f7182;
+    --amber:#e0a458;
+    --up:#3ecf8e;
+    --down:#e0576a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    min-height:100vh;
+  }
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 28px; border-bottom:1px solid var(--line);
+    position:sticky; top:0; background:rgba(11,15,20,0.92); backdrop-filter:blur(6px);
+    z-index:10;
+  }
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  .brand .mark{color:var(--amber); font-weight:700; letter-spacing:0.5px;}
+  .brand .sub{color:var(--dim); font-size:12px;}
+  .status{display:flex; align-items:center; gap:16px; font-size:12px; color:var(--dim);}
+  .dot{width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px;}
+  .dot.live{background:var(--up); box-shadow:0 0 8px var(--up);}
+  .dot.halt{background:var(--down); box-shadow:0 0 8px var(--down);}
+  #kill{
+    background:transparent; border:1px solid var(--down); color:var(--down);
+    padding:6px 12px; border-radius:3px; cursor:pointer; font-family:inherit; font-size:12px;
+    letter-spacing:0.5px;
+  }
+  #kill:hover{background:var(--down); color:var(--bg);}
+
+  .tape-wrap{border-bottom:1px solid var(--line); background:var(--panel); overflow:hidden; white-space:nowrap;}
+  .tape{display:inline-block; padding:8px 0; animation: scroll 40s linear infinite;}
+  .tape span{padding:0 22px; font-size:12px; color:var(--dim); border-right:1px solid var(--line);}
+  .tape span b{color:var(--ink);}
+  @keyframes scroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+
+  main{padding:28px; max-width:1180px; margin:0 auto;}
+
+  .grid{display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:24px;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:18px;}
+  .card .label{font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;}
+  .card .value{font-size:28px; font-weight:600;}
+  .value.pos{color:var(--up);} .value.neg{color:var(--down);}
+
+  .tabs{display:flex; gap:2px; margin-bottom:14px;}
+  .tabs button{
+    background:var(--panel); color:var(--dim); border:1px solid var(--line); border-bottom:none;
+    padding:8px 16px; font-family:inherit; font-size:12px; cursor:pointer; letter-spacing:0.5px;
+  }
+  .tabs button.active{color:var(--amber); background:var(--bg); border-color:var(--amber);}
+
+  .chart-card{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:16px; margin-bottom:24px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  thead th{
+    text-align:left; color:var(--dim); font-weight:500; font-size:11px; text-transform:uppercase;
+    letter-spacing:0.8px; padding:10px 12px; border-bottom:1px solid var(--line);
+  }
+  tbody td{padding:10px 12px; border-bottom:1px solid var(--line);}
+  tbody tr:hover{background:rgba(224,164,88,0.04);}
+  .pill{padding:2px 8px; border-radius:3px; font-size:11px; letter-spacing:0.5px;}
+  .pill.call{background:rgba(62,207,142,0.12); color:var(--up);}
+  .pill.put{background:rgba(224,87,106,0.12); color:var(--down);}
+  .pnl.pos{color:var(--up);} .pnl.neg{color:var(--down);}
+  .paper{color:var(--dim); font-size:10px; border:1px solid var(--line); padding:1px 5px; border-radius:2px; margin-left:6px;}
+  .empty{color:var(--dim); text-align:center; padding:40px 0; font-size:13px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="mark">◈ BANKNIFTY LEDGER</span>
+    <span class="sub">25EMA + Trend-Flip Execution Log</span>
+  </div>
+  <div class="status">
+    <span id="clock">--:--:--</span>
+    <span><span class="dot live" id="statusDot"></span><span id="statusText">checking…</span></span>
+    <button id="kill" onclick="killSwitch()">FLATTEN ALL</button>
+  </div>
+</header>
+
+<div class="tape-wrap"><div class="tape" id="tape">
+  <span>Waiting for signal feed…</span>
+</div></div>
+
+<main>
+  <div class="grid">
+    <div class="card"><div class="label">Today's P&amp;L</div><div class="value" id="pnlToday">₹0</div></div>
+    <div class="card"><div class="label">This Week</div><div class="value" id="pnlWeek">₹0</div></div>
+    <div class="card"><div class="label">This Month</div><div class="value" id="pnlMonth">₹0</div></div>
+    <div class="card"><div class="label">Win Rate (30d)</div><div class="value" id="winRate">–</div></div>
+  </div>
+
+  <div class="chart-card">
+    <canvas id="pnlChart" height="70"></canvas>
+  </div>
+
+  <div class="tabs">
+    <button class="active" data-range="today" onclick="setRange('today', this)">TODAY</button>
+    <button data-range="week" onclick="setRange('week', this)">WEEK</button>
+    <button data-range="month" onclick="setRange('month', this)">MONTH</button>
+    <button data-range="all" onclick="setRange('all', this)">ALL</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th><th>Signal</th><th>Symbol</th><th>Entry</th><th>SL</th><th>Target</th>
+        <th>Exit</th><th>Reason</th><th>P&amp;L</th>
+      </tr>
+    </thead>
+    <tbody id="tradeRows"><tr><td colspan="9" class="empty">Loading trades…</td></tr></tbody>
+  </table>
+</main>
+
+<script>
+let currentRange = 'today';
+let chart;
+
+function fmtMoney(n){
+  const sign = n < 0 ? '-' : '';
+  return sign + '₹' + Math.abs(Math.round(n)).toLocaleString('en-IN');
+}
+
+function startOfWeek(d){ const x=new Date(d); const day=x.getDay(); const diff=(day===0?-6:1)-day; x.setDate(x.getDate()+diff); return x; }
+function isoDate(d){ return d.toISOString().slice(0,10); }
+
+function tickClock(){
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN', {hour12:false});
+}
+setInterval(tickClock, 1000); tickClock();
+
+function updateStatus(){
+  const now = new Date();
+  const mins = now.getHours()*60+now.getMinutes();
+  const open = 9*60+15, close = 14*60+45;
+  const isWeekday = now.getDay() !== 0 && now.getDay() !== 6;
+  const live = isWeekday && mins >= open && mins <= close;
+  document.getElementById('statusDot').className = 'dot ' + (live ? 'live' : 'halt');
+  document.getElementById('statusText').textContent = live ? 'MARKET WINDOW ACTIVE' : 'OUTSIDE TRADING WINDOW';
+}
+setInterval(updateStatus, 10000); updateStatus();
+
+async function killSwitch(){
+  if(!confirm('Flatten all open positions immediately?')) return;
+  await fetch('/api/kill-switch', {method:'POST'});
+  alert('Flatten request sent.');
+  loadTrades();
+}
+
+function setRange(range, btn){
+  currentRange = range;
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  loadTrades();
+}
+
+async function loadTrades(){
+  const res = await fetch('/api/trades');
+  const all = await res.json();
+
+  const today = isoDate(new Date());
+  const weekStart = isoDate(startOfWeek(new Date()));
+  const monthStart = today.slice(0,7) + '-01';
+
+  const pnlOf = rows => rows.reduce((s,r)=> s + (r.net_pnl || 0), 0);
+  const todays = all.filter(r=>r.date === today);
+  const weeks = all.filter(r=>r.date >= weekStart);
+  const months = all.filter(r=>r.date >= monthStart);
+
+  setPnl('pnlToday', pnlOf(todays));
+  setPnl('pnlWeek', pnlOf(weeks));
+  setPnl('pnlMonth', pnlOf(months));
+
+  const closedMonth = months.filter(r=>r.status==='CLOSED');
+  const wins = closedMonth.filter(r=>(r.net_pnl||0) > 0).length;
+  document.getElementById('winRate').textContent = closedMonth.length
+    ? Math.round(100*wins/closedMonth.length) + '%' : '–';
+
+  const rangeRows = {today: todays, week: weeks, month: months, all: all}[currentRange];
+  renderTable(rangeRows);
+  renderTape(all.slice(0,12));
+  renderChart(rangeRows);
+}
+
+function setPnl(id, val){
+  const el = document.getElementById(id);
+  el.textContent = fmtMoney(val);
+  el.className = 'value ' + (val > 0 ? 'pos' : val < 0 ? 'neg' : '');
+}
+
+function renderTable(rows){
+  const tbody = document.getElementById('tradeRows');
+  if(!rows.length){ tbody.innerHTML = '<tr><td colspan="9" class="empty">No trades in this range.</td></tr>'; return; }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${(r.entry_time||'').replace('T',' ').slice(0,19)}</td>
+      <td><span class="pill ${r.signal_type==='CALL'?'call':'put'}">${r.signal_type}</span></td>
+      <td>${r.tradingsymbol||'—'}${r.is_paper ? '<span class="paper">PAPER</span>' : ''}</td>
+      <td>${r.entry_price ?? '—'}</td>
+      <td>${r.stop_loss ?? '—'}</td>
+      <td>${r.target ?? '—'}</td>
+      <td>${r.exit_price ?? (r.status==='OPEN' ? 'open' : '—')}</td>
+      <td>${r.exit_reason || (r.status==='OPEN' ? 'RUNNING' : '—')}</td>
+      <td class="pnl ${(r.net_pnl||0)>0?'pos':(r.net_pnl||0)<0?'neg':''}">${r.net_pnl!=null ? fmtMoney(r.net_pnl) : '—'}</td>
+    </tr>`).join('');
+}
+
+function renderTape(recent){
+  const tape = document.getElementById('tape');
+  if(!recent.length){ return; }
+  const items = recent.map(r => `<span><b>${r.signal_type}</b> ${r.tradingsymbol||''} @ ${r.entry_price ?? '—'} · ${r.exit_reason || 'open'}</span>`);
+  tape.innerHTML = items.concat(items).join(''); // duplicate for seamless loop
+}
+
+function renderChart(rows){
+  const closed = rows.filter(r=>r.status==='CLOSED').sort((a,b)=> a.entry_time.localeCompare(b.entry_time));
+  let running = 0;
+  const points = closed.map(r => { running += (r.net_pnl||0); return running; });
+  const labels = closed.map(r => (r.entry_time||'').slice(11,16));
+
+  const ctx = document.getElementById('pnlChart');
+  if(chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{
+      data: points, borderColor: '#e0a458', borderWidth: 2, pointRadius: 0,
+      tension: 0.25, fill: true, backgroundColor: 'rgba(224,164,88,0.08)'
+    }]},
+    options: {
+      responsive: true, plugins: { legend: { display:false } },
+      scales: {
+        x: { ticks:{ color:'#5f7182', font:{family:'monospace', size:10} }, grid:{ color:'#1f2a36' } },
+        y: { ticks:{ color:'#5f7182', font:{family:'monospace', size:10} }, grid:{ color:'#1f2a36' } }
+      }
+    }
+  });
+}
+
+loadTrades();
+setInterval(loadTrades, 5000);
+</script>
+</body>
+</html>

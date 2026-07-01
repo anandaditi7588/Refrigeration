@@ -1,0 +1,5 @@
+backend/.env
+backend/trades.db
+backend/holidays_cache.json
+__pycache__/
+*.pyc
