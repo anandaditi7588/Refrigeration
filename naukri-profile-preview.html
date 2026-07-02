@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naukri Profile Preview — Anand Dulange</title>
+<style>
+  :root {
+    --naukri-blue: #4a90d9;
+    --naukri-navy: #2b3d54;
+    --bg: #f0f2f5;
+    --card-bg: #ffffff;
+    --border: #e4e7eb;
+    --text-main: #2b2b2b;
+    --text-secondary: #6b7280;
+    --green: #1a7f37;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-main);
+  }
+  .page { max-width: 760px; margin: 24px auto; padding: 0 16px 60px; }
+  .note {
+    background: #fff8e1;
+    border: 1px solid #f0d97a;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #5c4a00;
+    margin-bottom: 20px;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .header-card { padding: 20px 24px; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+  .avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: var(--naukri-navy); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 600; flex-shrink: 0;
+  }
+  .name-block { display: flex; gap: 16px; align-items: center; }
+  .name { font-size: 22px; font-weight: 700; margin: 0; color: var(--naukri-navy); }
+  .title { font-size: 14px; color: var(--text-secondary); margin: 4px 0; }
+  .updated { font-size: 12px; color: #9aa0a6; }
+  .stat-row {
+    display: flex; gap: 24px; margin-top: 16px; padding-top: 16px;
+    border-top: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .stat { font-size: 13px; }
+  .stat-label { color: var(--text-secondary); display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .stat-value { font-weight: 600; color: var(--text-main); }
+  .verified-badge { color: var(--green); font-size: 11px; font-weight: 600; margin-left: 4px; }
+  .section-title {
+    font-size: 16px; font-weight: 700; padding: 16px 24px 4px;
+    margin: 0; color: var(--naukri-navy);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .edit-tag { font-size: 11px; color: var(--naukri-blue); font-weight: 600; }
+  .section-body { padding: 4px 24px 18px; font-size: 13.5px; line-height: 1.6; white-space: pre-line; }
+  .skills-wrap { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 24px 18px; }
+  .skill-chip {
+    background: #eef4fb; color: var(--naukri-navy);
+    border: 1px solid #d6e4f5; border-radius: 4px;
+    padding: 5px 12px; font-size: 12.5px; font-weight: 500;
+  }
+  .emp-item { padding: 14px 24px; border-top: 1px solid #f0f1f3; }
+  .emp-item:first-of-type { border-top: none; }
+  .emp-title { font-weight: 700; font-size: 14.5px; margin: 0; }
+  .emp-sub { font-size: 12.5px; color: var(--text-secondary); margin: 2px 0 8px; }
+  .emp-bullets { font-size: 13px; margin: 0; padding-left: 18px; }
+  .emp-bullets li { margin-bottom: 5px; line-height: 1.5; }
+  .emp-skills { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+  .emp-skills b { color: var(--text-main); }
+  .empty-note {
+    padding: 14px 24px; font-size: 13px; color: #b45309;
+    background: #fffbeb; margin: 0 24px 18px; border-radius: 4px;
+  }
+  .acc-item { padding: 10px 24px; border-top: 1px solid #f0f1f3; font-size: 13px; }
+  .acc-item:first-of-type { border-top: none; }
+  .acc-title { font-weight: 600; }
+  .acc-sub { color: var(--text-secondary); font-size: 12px; }
+  .career-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px;
+    padding: 6px 24px 18px; font-size: 13px;
+  }
+  .career-grid .k { color: var(--text-secondary); }
+  .career-grid .v { font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="note">
+    Preview only — built from your actual current Naukri profile export + latest resume, matched
+    for consistency with your LinkedIn content kit. Copy sections into your real Naukri profile;
+    the ⚠️ items in <code>naukri-profile-content.md</code> need your confirmation first (patent
+    count, employer name update).
+  </div>
+
+  <div class="card header-card">
+    <div class="header-top">
+      <div class="name-block">
+        <div class="avatar">AD</div>
+        <div>
+          <h1 class="name">Anand Dulange</h1>
+          <div class="title">Technical Lead at Bosch Home Comfort (formerly Johnson Controls)</div>
+          <div class="updated">Profile last updated - 02 Jul, 2026</div>
+        </div>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><span class="stat-label">Location</span><span class="stat-value">Pune, India</span></div>
+      <div class="stat"><span class="stat-label">Experience</span><span class="stat-value">10 Years</span></div>
+      <div class="stat"><span class="stat-label">Current Salary</span><span class="stat-value">₹24,00,000</span></div>
+      <div class="stat"><span class="stat-label">Notice Period</span><span class="stat-value">2 Months</span></div>
+      <div class="stat"><span class="stat-label">Phone</span><span class="stat-value">7588610829<span class="verified-badge">✓ Verified</span></span></div>
+      <div class="stat"><span class="stat-label">Email</span><span class="stat-value">dulange111@gmail.com<span class="verified-badge">✓ Verified</span></span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Resume Headline <span class="edit-tag">rewritten</span></h2>
+    <div class="section-body">HVAC-R Technical Lead | Rooftop Units, Chillers &amp; Ducted Package Systems | 7+ US Patents · Patent of the Year 2023 · JCI Techathon 2023 Winner</div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Key Skills</h2>
+    <div class="skills-wrap">
+      <span class="skill-chip">HVAC-R Product Development</span>
+      <span class="skill-chip">New Product Development (NPD)</span>
+      <span class="skill-chip">Refrigeration System Design</span>
+      <span class="skill-chip">Chiller Design (Air/Water-Cooled, Scroll, VFD)</span>
+      <span class="skill-chip">Rooftop &amp; Ducted Package Unit Design</span>
+      <span class="skill-chip">Heat Exchanger Design</span>
+      <span class="skill-chip">DFMEA &amp; DVPR</span>
+      <span class="skill-chip">Root Cause Analysis (8D)</span>
+      <span class="skill-chip">Simulation (IMAP, Wieland, Unilab, PV Elite)</span>
+      <span class="skill-chip">Machine Learning</span>
+      <span class="skill-chip">Macros</span>
+      <span class="skill-chip">VAVE</span>
+      <span class="skill-chip">Reverse Engineering</span>
+      <span class="skill-chip">Design Validation &amp; AHRI Testing</span>
+      <span class="skill-chip">Six Sigma</span>
+      <span class="skill-chip">Patent Development / IP Strategy</span>
+      <span class="skill-chip">Project Management</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Employment</h2>
+    <div class="emp-item">
+      <p class="emp-title">Technical Lead</p>
+      <p class="emp-sub">Bosch Home Comfort (formerly Johnson Controls) · Full-time · May 2024 – Present</p>
+      <ul class="emp-bullets">
+        <li>Leading product development, simulation, design review, prototype building, and testing/validation for rooftop units, owning cost optimization targets</li>
+        <li>Directing refrigeration system simulation and new controller logic development to cut design iteration time</li>
+        <li>Managing team training, project planning, and client communication to keep programs on schedule</li>
+        <li>Contributed to Johnson Controls' 2023 Patent of the Year and the JCI Techathon 2023 win during this tenure</li>
+      </ul>
+      <div class="emp-skills"><b>Top skills:</b> New Product Development, Refrigeration, HVAC, Machine Learning, Design Review</div>
+    </div>
+    <div class="emp-item">
+      <p class="emp-title">Senior Design Engineer</p>
+      <p class="emp-sub">Johnson Controls · Full-time · Mar 2019 – May 2024 (5 yr 3 mo) · Pune</p>
+      <ul class="emp-bullets">
+        <li>Owned product development for rooftop and ducted package units, concept through design validation</li>
+        <li>Designed high-efficiency ducted package units and 15T–27.5T rooftop units, including compressor/cabinet selection and controller logic</li>
+        <li>Filed patents covering refrigerant leak prediction (ML), hot gas reheat logic, and condenser fan control systems</li>
+      </ul>
+      <div class="emp-skills"><b>Top skills:</b> Rooftop Unit Design, Ducted Package Systems, Controls Logic, Simulation (IMAP)</div>
+    </div>
+    <div class="emp-item">
+      <p class="emp-title">Assistant Manager</p>
+      <p class="emp-sub">Blue Star Limited · Full-time · Jun 2015 – Mar 2019 (3 yr 10 mo) · Thane/Mumbai</p>
+      <ul class="emp-bullets">
+        <li>Led new product development for air-cooled and water-cooled VFD chillers (1Tr–450Tr range)</li>
+        <li>Directed heat exchanger selection and thermal design (Shell &amp; Tube, Fin &amp; Tube, MCHX, Brazed Plate) per ASME Sec VIII Div-1 &amp; TEMA-C</li>
+        <li>Built 100+ simulation models (70T–450T), managed prototype prep, DFA/DFM/DFS reviews, and AHRI testing &amp; certification</li>
+      </ul>
+      <div class="emp-skills"><b>Top skills:</b> Chiller Design, Heat Exchanger Design, AHRI Testing, Cost Optimization</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Profile Summary</h2>
+    <div class="section-body">HVAC-R product development engineer with 10 years designing rooftop units, ducted package systems, and chillers (air/water-cooled, scroll, VFD) from concept through AHRI-certified production. Holder of 7+ US patents — including refrigerant leak prediction (machine learning), hot gas reheat logic, and condenser fan control systems — recognized with Johnson Controls' Patent of the Year (2023) and a JCI Techathon 2023 win.
+
+Core strengths:
+- Heat exchanger selection &amp; thermal design (Shell &amp; Tube, Fin &amp; Tube, MCHX, Brazed Plate) per ASME Sec VIII Div-1 &amp; TEMA-C
+- Chiller/rooftop system design: compressor, oil separator, and component selection with cost optimization
+- Simulation-driven development (IMAP, Wieland, Unilab, PV Elite) to cut design cycle time
+- DFMEA, DFA/DFM/DFS, and design reviews through AHRI testing and certification
+- Cross-functional leadership: team training, project planning, client communication, on-time delivery</div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Accomplishments <span class="edit-tag">was empty — now filled</span></h2>
+    <div class="acc-item"><div class="acc-title">Patent: Refrigeration Leak Prediction Using Machine Learning</div><div class="acc-sub">US 2022/0035695 A1 · Issued May 20, 2022</div></div>
+    <div class="acc-item"><div class="acc-title">Patent: Performance Enhancement of Heat Pump Unit by Counter-Flow Heat Transfer Arrangement</div><div class="acc-sub">US 11,719,471 B2 · Issued May 4, 2021</div></div>
+    <div class="acc-item"><div class="acc-title">Patent: Implementation of Choice Midas Hot Gas Reheat Logic</div><div class="acc-sub">US 11,761,646 B2 · Issued Nov 24, 2020</div></div>
+    <div class="acc-item"><div class="acc-title">Patent: Condenser Fan Logic for Low Ambient Conditions</div><div class="acc-sub">US 2020/0356152 · Issued Mar 30, 2020</div></div>
+    <div class="acc-item"><div class="acc-title">Patent: New Sequencing (On-Off) Logic for Condenser Fans at Low Ambient Conditions</div><div class="acc-sub">US 2019/0356152 A1 · Issued Dec 19, 2019</div></div>
+    <div class="acc-item"><div class="acc-title">Patent: "SARS Killing" Air Filtration System for Rooftop Unit</div><div class="acc-sub">Application 2954493 · Filed Jun 20, 2022</div></div>
+    <div class="acc-item"><div class="acc-title">Certification: Industry 4.0</div><div class="acc-sub">Udemy · 2023</div></div>
+    <div class="acc-item"><div class="acc-title">Certification: Six Sigma</div><div class="acc-sub">Johnson Controls, Pune · 2021</div></div>
+    <div class="acc-item"><div class="acc-title">Certification: Machine Learning</div><div class="acc-sub">Udemy · 2022</div></div>
+    <div class="acc-item"><div class="acc-title">Certification: Macros</div><div class="acc-sub">Udemy · 2023</div></div>
+    <div class="acc-item"><div class="acc-title">Online Profile: LinkedIn</div><div class="acc-sub">linkedin.com/in/anand-dulange</div></div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Career Profile</h2>
+    <div class="career-grid">
+      <div class="k">Current industry</div><div class="v">Industrial Automation</div>
+      <div class="k">Department</div><div class="v">Research &amp; Development</div>
+      <div class="k">Role category</div><div class="v">Engineering &amp; Manufacturing</div>
+      <div class="k">Job role</div><div class="v">Product Development Manager</div>
+      <div class="k">Desired employment type</div><div class="v">Full Time, Permanent</div>
+      <div class="k">Preferred location</div><div class="v">Pune, Mumbai</div>
+      <div class="k">Expected salary</div><div class="v">₹37,00,000</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Education</h2>
+    <div class="acc-item"><div class="acc-title">M.Tech, Mechanical (Thermal)</div><div class="acc-sub">Walchand College of Engineering, Sangli (Shivaji University) · 2014–2016 · Full Time</div></div>
+    <div class="acc-item"><div class="acc-title">B.E, Mechanical Engineering</div><div class="acc-sub">Solapur University · 2009–2013 · Full Time</div></div>
+  </div>
+
+</div>
+</body>
+</html>
