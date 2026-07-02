@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkedIn Profile Preview — Anand Dulange</title>
+<style>
+  :root {
+    --linkedin-blue: #0a66c2;
+    --bg: #f4f2ee;
+    --card-bg: #ffffff;
+    --border: #e0dfdc;
+    --text-main: #000000e6;
+    --text-secondary: #00000099;
+    --text-muted: #00000066;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-main);
+  }
+  .page {
+    max-width: 720px;
+    margin: 24px auto;
+    padding: 0 16px 60px;
+  }
+  .note {
+    background: #fff8e1;
+    border: 1px solid #f0d97a;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #5c4a00;
+    margin-bottom: 20px;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .banner {
+    height: 200px;
+    background: linear-gradient(135deg, #0a66c2 0%, #0e3a63 60%, #072a49 100%);
+    position: relative;
+  }
+  .banner-icons {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    opacity: 0.25;
+    font-size: 42px;
+    color: #ffffff;
+  }
+  .profile-photo {
+    width: 152px;
+    height: 152px;
+    border-radius: 50%;
+    background: #cfd6dd;
+    border: 4px solid var(--card-bg);
+    margin: -76px 0 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: #6b7785;
+    font-weight: 600;
+  }
+  .profile-body {
+    padding: 12px 24px 20px;
+  }
+  .name {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 2px;
+  }
+  .pronouns {
+    color: var(--text-muted);
+    font-size: 15px;
+    font-weight: 400;
+  }
+  .headline {
+    font-size: 16px;
+    color: var(--text-main);
+    margin: 4px 0;
+    line-height: 1.4;
+  }
+  .location-line {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: 4px 0;
+  }
+  .location-line .contact-link {
+    color: var(--linkedin-blue);
+    font-weight: 600;
+    cursor: default;
+  }
+  .action-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 6px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: default;
+  }
+  .btn-primary {
+    background: var(--linkedin-blue);
+    color: #fff;
+  }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--text-secondary);
+    color: var(--text-main);
+  }
+  .section-title {
+    font-size: 20px;
+    font-weight: 600;
+    padding: 20px 24px 8px;
+    margin: 0;
+  }
+  .section-body {
+    padding: 0 24px 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-main);
+    white-space: pre-line;
+  }
+  .exp-item {
+    display: flex;
+    gap: 14px;
+    padding: 16px 24px;
+    border-top: 1px solid #eef0f2;
+  }
+  .exp-item:first-of-type { border-top: none; }
+  .exp-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+    background: #e9edf2;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7785;
+    font-size: 20px;
+  }
+  .exp-title { font-weight: 600; font-size: 15px; margin: 0; }
+  .exp-sub { font-size: 13px; color: var(--text-secondary); margin: 2px 0; }
+  .exp-bullets { font-size: 13.5px; margin: 8px 0 0; padding-left: 18px; color: var(--text-main); }
+  .exp-bullets li { margin-bottom: 6px; line-height: 1.5; }
+  .skills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 24px 20px;
+  }
+  .skill-chip {
+    background: #eef3f8;
+    color: var(--linkedin-blue);
+    border-radius: 16px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .skill-chip.top { background: var(--linkedin-blue); color: #fff; }
+  .cert-item {
+    padding: 12px 24px;
+    border-top: 1px solid #eef0f2;
+    font-size: 14px;
+  }
+  .cert-item:first-of-type { border-top: none; }
+  .cert-title { font-weight: 600; }
+  .cert-sub { color: var(--text-secondary); font-size: 13px; }
+  .checklist { padding: 0 24px 20px; font-size: 14px; line-height: 1.8; }
+  .checklist div { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="note">
+    Preview only — this mockup shows how the drafted content (see <code>linkedin-profile-content.md</code>)
+    would look laid out on a LinkedIn profile. Copy the sections you like into your real profile at
+    linkedin.com. Placeholder metrics like <strong>[ADD METRIC]</strong> should be replaced with your
+    real numbers before publishing.
+  </div>
+
+  <div class="card">
+    <div class="banner">
+      <div class="banner-icons">❄ ⚙ 🌡 ❄</div>
+    </div>
+    <div class="profile-photo">AD</div>
+    <div class="profile-body">
+      <h1 class="name">Anand Dulange</h1>
+      <div class="headline">Refrigeration Engineer | HVAC-R Design &amp; Project Management | Industrial Refrigeration Systems (Ammonia/CO2/Freon) | Driving Energy-Efficient, On-Time Project Delivery</div>
+      <div class="location-line">India · <span class="contact-link">Contact info</span> · 500+ connections</div>
+      <div class="action-row">
+        <div class="btn btn-primary">Open to</div>
+        <div class="btn btn-secondary">Add profile section</div>
+        <div class="btn btn-secondary">Enhance profile</div>
+        <div class="btn btn-secondary">•••</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">About</h2>
+    <div class="section-body">Refrigeration Engineer with hands-on experience across the full project lifecycle — from HVAC-R system design through installation, commissioning, and site management. I specialize in industrial and commercial refrigeration systems, translating technical requirements into designs that are energy-efficient, code-compliant, and built to last.
+
+Over my career I've [ADD METRIC: e.g., delivered 15+ refrigeration installation projects], [ADD METRIC: e.g., reduced energy consumption by X% through system redesign], and worked across [ADD DETAIL: cold storage / food processing / commercial HVAC / industrial plants]. I'm equally comfortable at the design table and on-site coordinating contractors, vendors, and safety compliance to keep projects on schedule and on budget.
+
+Currently looking to step into a Senior/Lead Refrigeration Engineer role where I can take on larger, more complex projects and mentor junior engineers. Open to connecting with fellow HVAC-R professionals, recruiters, and anyone working on interesting cooling/refrigeration challenges — feel free to reach out.</div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Experience</h2>
+    <div class="exp-item">
+      <div class="exp-logo">🏢</div>
+      <div>
+        <p class="exp-title">Refrigeration Engineer / Technician</p>
+        <p class="exp-sub">[Company Name] · Full-time</p>
+        <p class="exp-sub">[Start Date] – [End Date] · [Location]</p>
+        <ul class="exp-bullets">
+          <li>Designed and specified industrial/commercial refrigeration systems (ammonia/CO2/Freon), ensuring compliance with relevant codes and standards.</li>
+          <li>Managed [ADD NUMBER] end-to-end HVAC-R installation projects from design through commissioning, coordinating contractors, vendors, and site teams to hit deadlines.</li>
+          <li>Diagnosed and resolved system performance issues, reducing downtime by [ADD METRIC].</li>
+          <li>Implemented energy-efficiency improvements that cut operating costs by [ADD %].</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Skills</h2>
+    <div class="skills-wrap">
+      <span class="skill-chip top">HVAC Design</span>
+      <span class="skill-chip top">Refrigeration Systems</span>
+      <span class="skill-chip top">Project Management</span>
+      <span class="skill-chip">Industrial Refrigeration</span>
+      <span class="skill-chip">Ammonia Refrigeration Systems</span>
+      <span class="skill-chip">HVAC-R Installation</span>
+      <span class="skill-chip">Energy Efficiency</span>
+      <span class="skill-chip">Mechanical Design</span>
+      <span class="skill-chip">Commissioning</span>
+      <span class="skill-chip">Site Supervision</span>
+      <span class="skill-chip">Safety Compliance</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Licenses &amp; Certifications</h2>
+    <div class="cert-item">
+      <div class="cert-title">[ADD: e.g., IIAR Certified Ammonia Refrigeration Technician]</div>
+      <div class="cert-sub">[Issuing Organization] · [Year]</div>
+    </div>
+    <div class="cert-item">
+      <div class="cert-title">[ADD: e.g., EPA Section 608 Certification]</div>
+      <div class="cert-sub">[Issuing Organization] · [Year]</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Profile checklist (one-time setup)</h2>
+    <div class="checklist">
+      <div>☐ Professional headshot photo</div>
+      <div>☐ Custom banner image (industrial refrigeration themed)</div>
+      <div>☐ Custom URL: linkedin.com/in/anand-dulange</div>
+      <div>☐ "Open to Work" set for Senior/Lead Refrigeration Engineer roles</div>
+      <div>☐ Location and industry filled in</div>
+      <div>☐ 3+ recommendations from past managers/colleagues</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
