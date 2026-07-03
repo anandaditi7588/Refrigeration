@@ -77,8 +77,12 @@ data), `GET /` (dashboard UI).
   cache on any fetch failure so a transient NSE outage never accidentally
   lets the bot trade on a holiday (or blocks it on a real trading day).
 - **`backend/config.py`** — single source of truth for all settings, read
-  from environment variables (via `.env`). Never hardcode credentials or
-  trading parameters elsewhere; add new settings here.
+  from environment variables (via `.env`, loaded with `python-dotenv` at
+  import time). Never hardcode credentials or trading parameters elsewhere;
+  add new settings here. Also exposes `Config.now_ist()`/`Config.today_ist()`
+  — use these (not `datetime.now()`/`date.today()`) anywhere trading-day or
+  trading-window logic needs the actual IST wall clock, since the host
+  system's own clock/timezone isn't guaranteed to be IST.
 - **`backend/scheduler.py`** — optional `apscheduler`-based companion
   process: daily holiday-cache refresh at 07:00 IST, instrument-master
   refresh at 08:35 IST, and an EOD safety sweep (calls `/api/kill-switch`)

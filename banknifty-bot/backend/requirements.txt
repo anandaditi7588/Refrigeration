@@ -5,3 +5,5 @@ pyotp==2.9.0
 logzero==1.7.0
 websocket-client==1.8.0
 apscheduler==3.10.4
+python-dotenv==1.0.1
+tzdata==2024.1
