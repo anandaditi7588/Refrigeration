@@ -57,11 +57,15 @@ data), `GET /` (dashboard UI).
   Every method branches on `Config.PAPER_TRADE`: paper mode returns
   realistic fake data (random LTPs, `PAPER-<timestamp>` order ids) so the
   full pipeline is exercisable with no real capital; live mode calls the
-  real SDK. **`find_nearest_option`'s live branch deliberately raises
-  `NotImplementedError`** — the Angel One instrument-master lookup for
-  resolving option strike → symboltoken is intentionally left as a TODO
-  rather than guessed at, since a wrong symbol token would place a
-  wrong-instrument order. Wire this up before ever setting
+  real SDK, including `find_nearest_option`'s live branch, which delegates
+  strike/symboltoken resolution to `instrument_master.py`.
+- **`backend/instrument_master.py`** — fetches and caches Angel One's
+  published instrument master (`OpenAPIScripMaster.json`), filtered down to
+  just BANKNIFTY OPTIDX/NFO contracts, and resolves the nearest-expiry,
+  nearest-strike contract for a given spot price and option type. Same
+  fetch/cache/fall-back-to-disk shape as `holiday_calendar.py`. Its
+  field-name/date-format assumptions follow Angel One's documented schema
+  but haven't been verified against a live fetch — spot-check before
   `PAPER_TRADE=false`.
 - **`backend/db.py`** — SQLite (`trades.db`) logging every signal (acted-on
   or skipped, with a reason) and every trade (entry/exit/P&L). Backs the
@@ -76,10 +80,11 @@ data), `GET /` (dashboard UI).
   from environment variables (via `.env`). Never hardcode credentials or
   trading parameters elsewhere; add new settings here.
 - **`backend/scheduler.py`** — optional `apscheduler`-based companion
-  process: daily holiday-cache refresh at 07:00 IST and an EOD safety sweep
-  (calls `/api/kill-switch`) shortly after `MARKET_CLOSE`, as a belt-and-
-  braces flatten in case the in-process monitor thread died. The webhook
-  server works correctly without this process running.
+  process: daily holiday-cache refresh at 07:00 IST, instrument-master
+  refresh at 08:35 IST, and an EOD safety sweep (calls `/api/kill-switch`)
+  shortly after `MARKET_CLOSE`, as a belt-and-braces flatten in case the
+  in-process monitor thread died. The webhook server works correctly
+  without this process running.
 - **`backend/dashboard/index.html`** — static single-page dashboard, polls
   `/api/trades` and has a "FLATTEN ALL" button wired to `/api/kill-switch`.
 

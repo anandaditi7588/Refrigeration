@@ -10,6 +10,7 @@ pinescript/banknifty_ema_halftrend.pine   Signal engine (TradingView)
 backend/config.py                          All settings, from environment vars
 backend/db.py                              SQLite trade/signal log
 backend/holiday_calendar.py                Live NSE holiday fetch + cache
+backend/instrument_master.py               Live Angel One instrument master fetch + cache (option resolution)
 backend/smartapi_client.py                 Angel One SmartAPI wrapper (paper-mode aware)
 backend/order_manager.py                   Entry, SL/target monitor, EOD square-off, kill switch
 backend/webhook_server.py                  Flask app — run this
@@ -72,12 +73,17 @@ different behavior.
   → simulated fill → SL/target monitor → dashboard). Leave it on until
   you've watched a full live trading session of paper trades match your
   expectations.
-- **The strike/instrument-token lookup in `smartapi_client.py` is a stub**
-  (`find_nearest_option`, live branch) — it deliberately raises
-  `NotImplementedError` rather than guessing at Angel One's current
-  instrument-master format, since getting the wrong symbol token would place
-  a wrong-instrument order. Wire this up against Angel One's published
-  instrument master JSON before flipping `PAPER_TRADE=false`.
+- **The strike/instrument-token lookup** (`find_nearest_option`, live
+  branch in `smartapi_client.py`) resolves real contracts via
+  `instrument_master.py`, which downloads and caches Angel One's published
+  instrument master (`OpenAPIScripMaster.json`, refreshed daily) and picks
+  the nearest upcoming BANKNIFTY expiry and nearest strike to the signal's
+  spot price. That module's field-name/date-format assumptions are based on
+  Angel One's documented schema but were not verified against a live fetch
+  of the file in the environment this was built in — spot-check them
+  against the current file before flipping `PAPER_TRADE=false`. It also
+  warns (but doesn't block) if the resolved contract's lot size disagrees
+  with the configured `LOT_SIZE`.
 - **Confirm Angel One's current algo-trading registration requirement**
   directly with them — this is governed by SEBI rules that have been
   actively changing and isn't something to rely on a static answer for.

@@ -19,6 +19,7 @@ from flask import Flask, jsonify, request, render_template
 
 import db
 import holiday_calendar
+import instrument_master
 from config import Config
 from order_manager import OrderManager
 
@@ -76,4 +77,6 @@ def dashboard():
 
 if __name__ == "__main__":
     holiday_calendar.refresh_holidays()
+    if not Config.PAPER_TRADE:
+        instrument_master.refresh_instrument_master()
     app.run(host=Config.HOST, port=Config.PORT)

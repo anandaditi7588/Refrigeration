@@ -62,6 +62,16 @@ class Config:
         "HOLIDAY_CACHE_PATH", os.path.join(os.path.dirname(__file__), "holidays_cache.json")
     )
 
+    # --- Angel One instrument master (live-mode option resolution) ---
+    INSTRUMENT_MASTER_URL = os.getenv(
+        "INSTRUMENT_MASTER_URL",
+        "https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json",
+    )
+    INSTRUMENT_MASTER_CACHE_PATH = os.getenv(
+        "INSTRUMENT_MASTER_CACHE_PATH",
+        os.path.join(os.path.dirname(__file__), "instrument_master_cache.json"),
+    )
+
     # --- Server ---
     HOST = os.getenv("HOST", "0.0.0.0")
     PORT = int(os.getenv("PORT", "8080"))
