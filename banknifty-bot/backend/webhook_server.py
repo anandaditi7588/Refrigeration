@@ -13,12 +13,11 @@ with an added "secret" field you must add in the TradingView alert message box):
   "secret": "your-shared-secret"
 }
 """
-from datetime import date
-
 from flask import Flask, jsonify, request, render_template
 
 import db
 import holiday_calendar
+import instrument_master
 from config import Config
 from order_manager import OrderManager
 
@@ -38,7 +37,7 @@ def webhook():
     if signal_type not in ("CALL", "PUT"):
         return jsonify({"status": "ignored", "reason": "not_actionable_signal"}), 200
 
-    if not holiday_calendar.is_trading_day(date.today()):
+    if not holiday_calendar.is_trading_day(Config.today_ist()):
         db.log_signal(signal_type, payload.get("price"), str(payload), acted_on=False,
                        skip_reason="NON_TRADING_DAY")
         return jsonify({"status": "skipped", "reason": "non_trading_day"}), 200
@@ -76,4 +75,6 @@ def dashboard():
 
 if __name__ == "__main__":
     holiday_calendar.refresh_holidays()
+    if not Config.PAPER_TRADE:
+        instrument_master.refresh_instrument_master()
     app.run(host=Config.HOST, port=Config.PORT)

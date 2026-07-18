@@ -2,7 +2,6 @@
 import sqlite3
 import threading
 from contextlib import contextmanager
-from datetime import datetime
 
 from config import Config
 
@@ -67,14 +66,14 @@ def log_signal(signal_type, spot_price, raw_payload, acted_on=False, skip_reason
         cur = conn.execute(
             "INSERT INTO signals (received_at, signal_type, spot_price, raw_payload, acted_on, skip_reason) "
             "VALUES (?, ?, ?, ?, ?, ?)",
-            (datetime.now().isoformat(), signal_type, spot_price, raw_payload, int(acted_on), skip_reason),
+            (Config.now_ist().isoformat(), signal_type, spot_price, raw_payload, int(acted_on), skip_reason),
         )
         return cur.lastrowid
 
 
 def open_trade(signal_id, signal_type, tradingsymbol, symboltoken, strike, option_type,
                quantity, entry_price, stop_loss, target, is_paper, order_id=None):
-    now = datetime.now()
+    now = Config.now_ist()
     with get_conn() as conn:
         cur = conn.execute(
             """INSERT INTO trades
@@ -95,7 +94,7 @@ def close_trade(trade_id, exit_price, exit_reason):
         pnl = (exit_price - row["entry_price"]) * row["quantity"]
         conn.execute(
             "UPDATE trades SET exit_time=?, exit_price=?, exit_reason=?, net_pnl=?, status='CLOSED' WHERE id=?",
-            (datetime.now().isoformat(), exit_price, exit_reason, pnl, trade_id),
+            (Config.now_ist().isoformat(), exit_price, exit_reason, pnl, trade_id),
         )
         return pnl
 

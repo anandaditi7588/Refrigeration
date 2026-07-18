@@ -5,6 +5,13 @@ never hardcode API keys / TOTP secrets / client codes in source.
 Copy .env.example to .env and fill in real values before going live.
 """
 import os
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+
 
 def _bool(name, default="true"):
     return os.getenv(name, default).strip().lower() in ("1", "true", "yes", "on")
@@ -62,6 +69,26 @@ class Config:
         "HOLIDAY_CACHE_PATH", os.path.join(os.path.dirname(__file__), "holidays_cache.json")
     )
 
+    # --- Angel One instrument master (live-mode option resolution) ---
+    INSTRUMENT_MASTER_URL = os.getenv(
+        "INSTRUMENT_MASTER_URL",
+        "https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json",
+    )
+    INSTRUMENT_MASTER_CACHE_PATH = os.getenv(
+        "INSTRUMENT_MASTER_CACHE_PATH",
+        os.path.join(os.path.dirname(__file__), "instrument_master_cache.json"),
+    )
+
     # --- Server ---
     HOST = os.getenv("HOST", "0.0.0.0")
     PORT = int(os.getenv("PORT", "8080"))
+
+    @staticmethod
+    def now_ist():
+        """Current wall-clock time in TIMEZONE, regardless of the host's own
+        system clock/timezone (e.g. a UTC-configured server)."""
+        return datetime.now(ZoneInfo(Config.TIMEZONE))
+
+    @staticmethod
+    def today_ist():
+        return Config.now_ist().date()

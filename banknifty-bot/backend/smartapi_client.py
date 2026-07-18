@@ -14,6 +14,7 @@ import time as _time
 
 import pyotp
 
+import instrument_master
 from config import Config
 
 try:
@@ -61,14 +62,6 @@ class SmartAPIClient:
         """
         Returns dict: {tradingsymbol, symboltoken, strike, ltp}
         option_type: "CE" or "PE"
-
-        Real implementation should use the Angel One instrument master CSV
-        (https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json)
-        to resolve the correct weekly/monthly Bank Nifty option contract and
-        its symboltoken for the nearest strike to `spot_price`, then call
-        api.ltpData(...) for the premium. That lookup is environment-specific
-        (depends on which expiry you trade), so it's left as a clearly marked
-        TODO rather than guessed at here.
         """
         if self.paper:
             strike = round(spot_price / 100) * 100
@@ -76,10 +69,21 @@ class SmartAPIClient:
             symbol = f"BANKNIFTY{strike}{option_type}-PAPER"
             return {"tradingsymbol": symbol, "symboltoken": "PAPER", "strike": strike, "ltp": fake_ltp}
 
-        # TODO: real instrument-master lookup + api.ltpData call
-        raise NotImplementedError(
-            "Wire up the Angel One instrument master lookup for live option resolution."
-        )
+        option = instrument_master.find_nearest_option(spot_price, option_type, expiry)
+        if option["lotsize"] and option["lotsize"] != Config.LOT_SIZE:
+            print(
+                f"[smartapi_client] WARNING: instrument master lot size "
+                f"({option['lotsize']}) differs from configured LOT_SIZE "
+                f"({Config.LOT_SIZE}); update .env."
+            )
+        quote = self.api.ltpData("NFO", option["tradingsymbol"], option["symboltoken"])
+        ltp = float(quote["data"]["ltp"])
+        return {
+            "tradingsymbol": option["tradingsymbol"],
+            "symboltoken": option["symboltoken"],
+            "strike": option["strike"],
+            "ltp": ltp,
+        }
 
     def get_ltp(self, tradingsymbol, symboltoken, exchange="NFO"):
         if self.paper:

@@ -6,7 +6,7 @@ EOD square-off. The Pine Script side already resolves the Call/Put decision
 """
 import threading
 import time
-from datetime import datetime, time as dtime
+from datetime import time as dtime
 
 import db
 from config import Config
@@ -109,7 +109,7 @@ class OrderManager:
 
     # ------------------------------------------------------------------
     def _within_trading_window(self):
-        now = datetime.now()
+        now = Config.now_ist()
         open_h, open_m = (int(x) for x in Config.MARKET_OPEN.split(":"))
         close_h, close_m = (int(x) for x in Config.MARKET_CLOSE.split(":"))
         start, end = dtime(open_h, open_m), dtime(close_h, close_m)
