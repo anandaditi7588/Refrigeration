@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf7f2">
+
+  <title>AI Food Recipes — Every cuisine on earth, cooked your way</title>
+  <meta name="description" content="Generate a complete, structured recipe for any dish from any cuisine — customised to your servings, diet, spice level, allergies, equipment and the ingredients already in your kitchen.">
+  <meta name="keywords" content="AI recipes, recipe generator, world cuisine, vegetarian, vegan, healthy recipes, nutrition, meal planning">
+  <meta name="author" content="AI Food Recipes">
+  <link rel="canonical" href="./index.html">
+
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AI Food Recipes — Every cuisine on earth, cooked your way">
+  <meta property="og:description" content="A 16-step brief in, a fully structured 20-section recipe out. Any dish, any country, scaled to your table.">
+  <meta property="og:site_name" content="AI Food Recipes">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 (grid + utilities) and Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/print.css">
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "AI Food Recipes",
+    "applicationCategory": "LifestyleApplication",
+    "operatingSystem": "Any modern browser",
+    "description": "Generate complete, structured recipes for any dish from any cuisine, customised to your servings, diet, spice level, allergies and available equipment.",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "featureList": [
+      "16-step recipe customisation wizard",
+      "Automatic ingredient scaling by serving count",
+      "Per-serving nutrition and health analysis",
+      "Allergy and dietary substitution",
+      "Shopping list, cost estimate and meal planning",
+      "Printable and shareable recipes"
+    ]
+  }
+  </script>
+</head>
+
+<body>
+  <a class="afr-skip" href="#main">Skip to main content</a>
+
+  <!-- ===================================================== Navigation -->
+  <header class="afr-nav afr-glass">
+    <div class="afr-nav__inner">
+      <a class="afr-brand" href="index.html">
+        <span class="afr-brand__mark" aria-hidden="true"><i class="fa-solid fa-utensils"></i></span>
+        <span class="afr-brand__text">AI Food Recipes</span>
+      </a>
+
+      <nav class="afr-nav__links" data-open="false" aria-label="Main navigation">
+        <a class="afr-nav__link" href="index.html">Home</a>
+        <a class="afr-nav__link" href="#categories">Categories</a>
+        <a class="afr-nav__link" href="#cat-trending">Trending</a>
+        <a class="afr-nav__link" href="#regional">Regional</a>
+        <a class="afr-nav__link" href="saved.html">Saved</a>
+      </nav>
+
+      <div class="afr-nav__actions">
+        <button class="afr-btn afr-btn--ghost afr-btn--icon" type="button" data-theme-toggle
+                aria-pressed="false" aria-label="Switch to dark mode">
+          <i class="fa-solid fa-moon" aria-hidden="true"></i>
+        </button>
+        <a class="afr-btn afr-btn--primary afr-btn--sm afr-nav__cta" href="create.html#wizard">
+          <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Create a Dish
+        </a>
+        <button class="afr-btn afr-btn--ghost afr-btn--icon afr-nav__toggle" type="button"
+                aria-expanded="false" aria-label="Open the navigation menu">
+          <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ========================================================= Hero -->
+    <section class="afr-hero">
+      <div class="afr-shell afr-hero__grid">
+        <div>
+          <p class="afr-eyebrow"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i> Every country · Every cuisine</p>
+          <h1 class="afr-hero__title">Tell us the dish.<br>We'll write the <em>whole recipe</em>.</h1>
+          <p class="afr-hero__lede">
+            Not a search box — a kitchen brief. Sixteen quick questions about your servings, diet,
+            spice level, allergies, equipment and what's already in your fridge, and you get a complete
+            recipe built around all of it: scaled quantities, step-by-step method with temperatures and
+            timings, per-serving nutrition, a costed shopping list and twenty structured sections.
+          </p>
+
+          <form class="afr-search" data-home="search" role="search">
+            <div class="afr-search__field">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true" style="color:var(--afr-text-muted)"></i>
+              <label class="afr-sr" for="home-search">Search recipes</label>
+              <input class="afr-search__input" id="home-search" type="search" autocomplete="off"
+                     placeholder="Search any dish — biryani, pad thai, lasagna, sushi…">
+              <button class="afr-btn afr-btn--primary afr-btn--sm" type="submit">Search</button>
+            </div>
+            <div class="afr-search__results" data-home="results" hidden role="listbox" aria-label="Search results"></div>
+          </form>
+
+          <div class="afr-hero__cta">
+            <a class="afr-btn afr-btn--primary afr-btn--lg" href="create.html#wizard">
+              <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Create Your Own Dish
+            </a>
+            <a class="afr-btn afr-btn--ghost afr-btn--lg" href="#categories">
+              Browse categories <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+            </a>
+          </div>
+
+          <div class="afr-hero__stats">
+            <div class="afr-hero__stat"><strong>16</strong><span>customisation steps</span></div>
+            <div class="afr-hero__stat"><strong>20</strong><span>recipe sections</span></div>
+            <div class="afr-hero__stat"><strong>16</strong><span>cuisine profiles</span></div>
+            <div class="afr-hero__stat"><strong>19</strong><span>nutrients per serving</span></div>
+          </div>
+        </div>
+
+        <div class="afr-hero__art" data-home="hero-art" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <!-- ================================================== Categories -->
+    <section class="afr-section afr-section--tight" id="categories">
+      <div class="afr-shell">
+        <div class="afr-section-head">
+          <div>
+            <p class="afr-eyebrow"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Categories</p>
+            <h2>Recipe Categories</h2>
+            <p>Pick a starting point — every tile opens the builder with that idea pre-loaded.</p>
+          </div>
+        </div>
+        <div class="afr-grid afr-grid--narrow" data-home="categories"></div>
+      </div>
+    </section>
+
+    <!-- ============================================ Create highlight -->
+    <section class="afr-section afr-section--tight">
+      <div class="afr-shell">
+        <div class="afr-glass afr-split" style="padding:clamp(24px,4vw,48px)">
+          <div>
+            <p class="afr-eyebrow"><i class="fa-solid fa-star" aria-hidden="true"></i> The main event</p>
+            <h2>Create Your Own Dish</h2>
+            <p style="color:var(--afr-text-muted)">
+              This is the part that isn't a recipe search. You describe the meal you actually want —
+              how many people, how much time, how hot, how sweet, how salty, how oily, what you're
+              allergic to, what appliances you own, what's already in your fridge — and the recipe is
+              built to match. Change the servings and every quantity, the nutrition panel and the cost
+              estimate all recalculate.
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin:18px 0">
+              <span class="afr-chip afr-chip--brand">Servings scaling</span>
+              <span class="afr-chip afr-chip--brand">Allergy-safe swaps</span>
+              <span class="afr-chip afr-chip--brand">Appliance-aware method</span>
+              <span class="afr-chip afr-chip--brand">Per-serving nutrition</span>
+              <span class="afr-chip afr-chip--brand">Shopping list</span>
+              <span class="afr-chip afr-chip--brand">Cost per serving</span>
+            </div>
+            <a class="afr-btn afr-btn--primary afr-btn--lg" href="create.html#wizard">
+              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Start the 16-step builder
+            </a>
+          </div>
+          <ol style="display:grid;gap:12px;list-style:none;padding:0;margin:0">
+            <li class="afr-suit__item"><span class="afr-suit__dot" style="background:var(--afr-brand-500)"></span>
+              <div><strong>Describe the dish</strong><small>Any dish, any country, in your own words</small></div></li>
+            <li class="afr-suit__item"><span class="afr-suit__dot" style="background:var(--afr-brand-500)"></span>
+              <div><strong>Set your constraints</strong><small>Diet, spice, salt, oil, time, equipment, allergies</small></div></li>
+            <li class="afr-suit__item"><span class="afr-suit__dot" style="background:var(--afr-accent-500)"></span>
+              <div><strong>Get 20 structured sections</strong><small>Never a wall of text — tables, timelines and steps</small></div></li>
+            <li class="afr-suit__item"><span class="afr-suit__dot" style="background:var(--afr-accent-500)"></span>
+              <div><strong>Print, save or share it</strong><small>Ink-friendly layout and a tickable shopping list</small></div></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================== Recipe rails (injected by JS) -->
+    <div data-home="sections"></div>
+
+    <!-- =============================================== Regional grid -->
+    <section class="afr-section" id="regional">
+      <div class="afr-shell">
+        <div class="afr-section-head">
+          <div>
+            <p class="afr-eyebrow"><i class="fa-solid fa-globe" aria-hidden="true"></i> Regional Cuisine</p>
+            <h2>Cook from anywhere</h2>
+            <p>Each cuisine carries its own flavour profile — the fat it starts with, the aromatics that
+              hit the pan first, the acid that finishes it. Pick one and the method changes accordingly.</p>
+          </div>
+        </div>
+        <div class="afr-grid afr-grid--narrow" data-home="regional"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================= Footer -->
+  <footer class="afr-footer">
+    <div class="afr-shell afr-footer__grid">
+      <div>
+        <a class="afr-brand" href="index.html" style="margin-bottom:12px">
+          <span class="afr-brand__mark" aria-hidden="true"><i class="fa-solid fa-utensils"></i></span>
+          <span class="afr-brand__text">AI Food Recipes</span>
+        </a>
+        <p style="color:var(--afr-text-muted);font-size:.92rem;max-width:38ch">
+          A recipe builder for every kitchen on earth. Runs entirely in your browser —
+          your saved recipes and preferences never leave your device.
+        </p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="create.html#wizard">Create a Dish</a></li>
+          <li><a href="saved.html">Saved Recipes</a></li>
+          <li><a href="#categories">Categories</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Collections</h4>
+        <ul>
+          <li><a href="#cat-trending">Trending</a></li>
+          <li><a href="#cat-healthy">Healthy</a></li>
+          <li><a href="#cat-vegetarian">Vegetarian</a></li>
+          <li><a href="#cat-quick">Quick Recipes</a></li>
+          <li><a href="#cat-desserts">Desserts</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Good to know</h4>
+        <ul>
+          <li><a href="#regional">Every cuisine supported</a></li>
+          <li><a href="create.html#wizard">Allergy-aware</a></li>
+          <li><a href="create.html#wizard">Nutrition per serving</a></li>
+          <li><a href="README.md">Developer docs</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="afr-shell afr-footer__bottom">
+      <span>© <span data-year>2026</span> AI Food Recipes. Built with HTML, CSS, Bootstrap 5 and vanilla JavaScript.</span>
+      <span>Nutrition, cost and timing figures are estimates, not medical or financial advice.</span>
+    </div>
+  </footer>
+
+  <!-- ======================================================= Scripts -->
+  <!-- Core -->
+  <script src="assets/js/core/config.js"></script>
+  <script src="assets/js/core/utils.js"></script>
+  <script src="assets/js/core/store.js"></script>
+  <script src="assets/js/core/ui.js"></script>
+  <!-- Services that data files depend on -->
+  <script src="assets/js/services/image-service.js"></script>
+  <!-- Knowledge base -->
+  <script src="assets/js/data/ingredients.js"></script>
+  <script src="assets/js/data/cuisines.js"></script>
+  <script src="assets/js/data/techniques.js"></script>
+  <script src="assets/js/data/wizard-steps.js"></script>
+  <script src="assets/js/data/catalog.js"></script>
+  <!-- Components + page -->
+  <script src="assets/js/components/recipe-card.js"></script>
+  <script src="assets/js/pages/home.js"></script>
+  <!-- Bootstrap bundle last; the app does not depend on its JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+</body>
+</html>

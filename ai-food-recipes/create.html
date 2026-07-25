@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf7f2">
+
+  <title>Create Your Own Dish — AI Food Recipes</title>
+  <meta name="description" content="Answer 16 questions about your dish, servings, diet, spice level, allergies and equipment, and get a complete 20-section recipe with scaled quantities, per-serving nutrition, a shopping list and a costed breakdown.">
+  <link rel="canonical" href="./create.html">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Create Your Own Dish — AI Food Recipes">
+  <meta property="og:description" content="A 16-step brief in, a fully structured recipe out. Any dish, any cuisine, scaled to your table.">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/print.css">
+</head>
+
+<body>
+  <a class="afr-skip" href="#main">Skip to main content</a>
+
+  <header class="afr-nav afr-glass">
+    <div class="afr-nav__inner">
+      <a class="afr-brand" href="index.html">
+        <span class="afr-brand__mark" aria-hidden="true"><i class="fa-solid fa-utensils"></i></span>
+        <span class="afr-brand__text">AI Food Recipes</span>
+      </a>
+      <nav class="afr-nav__links" data-open="false" aria-label="Main navigation">
+        <a class="afr-nav__link" href="index.html">Home</a>
+        <a class="afr-nav__link" href="index.html#categories">Categories</a>
+        <a class="afr-nav__link" href="create.html">Create a Dish</a>
+        <a class="afr-nav__link" href="saved.html">Saved</a>
+      </nav>
+      <div class="afr-nav__actions">
+        <button class="afr-btn afr-btn--ghost afr-btn--icon" type="button" data-theme-toggle
+                aria-pressed="false" aria-label="Switch to dark mode">
+          <i class="fa-solid fa-moon" aria-hidden="true"></i>
+        </button>
+        <button class="afr-btn afr-btn--ghost afr-btn--icon afr-nav__toggle" type="button"
+                aria-expanded="false" aria-label="Open the navigation menu">
+          <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="afr-section afr-section--tight" id="wizard">
+      <div class="afr-shell">
+
+        <!-- ------------------------------------------------ Wizard -->
+        <div data-view="wizard">
+          <div class="afr-section-head">
+            <div>
+              <p class="afr-eyebrow"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                AI recipe builder</p>
+              <h1>Create Your Own Dish</h1>
+              <p>Sixteen questions. Every answer genuinely changes the recipe — quantities, method,
+                equipment, nutrition and cost all recalculate around what you tell us.</p>
+            </div>
+            <a class="afr-btn afr-btn--ghost afr-btn--sm" href="index.html">
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to browsing
+            </a>
+          </div>
+
+          <div class="afr-banner" data-last-recipe hidden></div>
+
+          <div data-wizard-host></div>
+
+          <div class="afr-banner" style="margin-top:22px">
+            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+            <span>Everything you enter stays in your browser. Nothing is uploaded unless you configure
+              an external AI or recipe API in <code>assets/js/core/config.js</code>.</span>
+          </div>
+        </div>
+
+        <!-- ----------------------------------------------- Loading -->
+        <div data-view="loading" hidden></div>
+
+        <!-- ------------------------------------------------ Result -->
+        <div data-view="result" hidden>
+          <div data-result="header" style="margin-bottom:24px"></div>
+          <div data-result="body"></div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="afr-footer" data-print="hide">
+    <div class="afr-shell afr-footer__grid">
+      <div>
+        <a class="afr-brand" href="index.html" style="margin-bottom:12px">
+          <span class="afr-brand__mark" aria-hidden="true"><i class="fa-solid fa-utensils"></i></span>
+          <span class="afr-brand__text">AI Food Recipes</span>
+        </a>
+        <p style="color:var(--afr-text-muted);font-size:.92rem;max-width:38ch">
+          Recipes are generated for your brief, never copied from other sites.
+        </p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="create.html#wizard">Create a Dish</a></li>
+          <li><a href="saved.html">Saved Recipes</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>How it works</h4>
+        <ul>
+          <li><a href="#wizard">16-step brief</a></li>
+          <li><a href="#wizard">20 output sections</a></li>
+          <li><a href="README.md">Provider integration</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Good to know</h4>
+        <ul>
+          <li><a href="#wizard">Allergy-aware substitutions</a></li>
+          <li><a href="#wizard">Nutrition per serving</a></li>
+          <li><a href="#wizard">Cost estimates</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="afr-shell afr-footer__bottom">
+      <span>© <span data-year>2026</span> AI Food Recipes.</span>
+      <span>Nutrition, cost and timing figures are estimates, not medical advice.</span>
+    </div>
+  </footer>
+
+  <!-- ======================================================= Scripts -->
+  <script src="assets/js/core/config.js"></script>
+  <script src="assets/js/core/utils.js"></script>
+  <script src="assets/js/core/store.js"></script>
+  <script src="assets/js/core/ui.js"></script>
+
+  <script src="assets/js/services/image-service.js"></script>
+
+  <script src="assets/js/data/ingredients.js"></script>
+  <script src="assets/js/data/cuisines.js"></script>
+  <script src="assets/js/data/techniques.js"></script>
+  <script src="assets/js/data/wizard-steps.js"></script>
+  <script src="assets/js/data/catalog.js"></script>
+
+  <script src="assets/js/services/nutrition-service.js"></script>
+  <script src="assets/js/services/prompt-builder.js"></script>
+
+  <script src="assets/js/providers/recipe-schema.js"></script>
+  <script src="assets/js/providers/ai-local.js"></script>
+  <script src="assets/js/providers/ai-remote.js"></script>
+  <script src="assets/js/providers/video-providers.js"></script>
+  <script src="assets/js/providers/recipe-api-providers.js"></script>
+  <script src="assets/js/providers/registry.js"></script>
+
+  <script src="assets/js/services/recipe-service.js"></script>
+
+  <script src="assets/js/components/recipe-card.js"></script>
+  <script src="assets/js/components/wizard.js"></script>
+  <script src="assets/js/components/recipe-view.js"></script>
+
+  <script src="assets/js/pages/create.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+</body>
+</html>

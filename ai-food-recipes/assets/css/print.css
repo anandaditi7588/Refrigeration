@@ -1,0 +1,94 @@
+/* ==========================================================================
+   Print stylesheet — turns the generated recipe into a clean, ink-friendly
+   sheet. Also what the "Download PDF" button uses (print → Save as PDF).
+   ========================================================================== */
+@media print {
+  @page { margin: 14mm; size: A4; }
+
+  :root {
+    --afr-bg: #fff;
+    --afr-bg-alt: #fff;
+    --afr-surface: #fff;
+    --afr-surface-2: #fff;
+    --afr-text: #000;
+    --afr-text-muted: #444;
+    --afr-border: #bbb;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11.5pt;
+  }
+
+  /* Chrome that carries no meaning on paper. */
+  .afr-nav,
+  .afr-footer,
+  .afr-toasts,
+  .afr-actionbar,
+  .afr-skip,
+  .afr-jump,
+  .afr-hero__cta,
+  .afr-search,
+  .afr-wizard__rail,
+  .afr-wizard__nav,
+  .afr-card__save,
+  .afr-video__play,
+  [data-print="hide"] { display: none !important; }
+
+  /* Accordions print fully expanded regardless of UI state. */
+  .afr-acc__body[hidden] { display: block !important; }
+  .afr-acc__chev { display: none !important; }
+  .afr-acc {
+    border: 1px solid #999 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 8mm;
+  }
+  .afr-acc__head { background: #f3f3f3 !important; padding: 6px 10px; font-size: 13pt; }
+  .afr-acc__idx { background: #333 !important; color: #fff !important; }
+  .afr-acc__body { padding: 8px 10px; }
+
+  .afr-glass {
+    background: #fff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: 1px solid #bbb !important;
+  }
+
+  /* Keep atomic blocks together across page breaks. */
+  .afr-step, .afr-card, .afr-stat, .afr-nutri__item, .afr-video, tr, .afr-note {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  h1, h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
+
+  .afr-table { min-width: 0 !important; font-size: 10pt; }
+  .afr-table thead th { background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .afr-table-wrap { overflow: visible !important; }
+
+  .afr-step__num, .afr-brand__mark, .afr-btn--primary {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  img { max-width: 100% !important; }
+  .afr-step__media img, .afr-hero-recipe img { max-height: 62mm; object-fit: cover; }
+
+  /* Expose link targets so a printed sheet stays useful. */
+  .afr-print-url a::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #555;
+    word-break: break-all;
+  }
+
+  /* Printed header/footer injected by the recipe view. */
+  .afr-print-head { display: block !important; border-bottom: 2px solid #000; margin-bottom: 6mm; padding-bottom: 3mm; }
+  .afr-print-foot { display: block !important; border-top: 1px solid #999; margin-top: 6mm; padding-top: 3mm; font-size: 9pt; color: #555; }
+}
+
+/* Hidden on screen, revealed only on paper. */
+.afr-print-head, .afr-print-foot { display: none; }

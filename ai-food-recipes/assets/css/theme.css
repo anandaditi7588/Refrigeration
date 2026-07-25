@@ -1,0 +1,264 @@
+/* ==========================================================================
+   AI Food Recipes — Design tokens, theming (light/dark), base elements.
+   Loaded before components.css. Deliberately independent of Bootstrap so the
+   core layout survives even if the CDN is unavailable.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Tokens — light theme is the default, dark theme overrides below.
+   -------------------------------------------------------------------------- */
+:root {
+  /* Brand ramp: warm saffron → paprika, works across every cuisine we cover. */
+  --afr-brand-50: #fff5eb;
+  --afr-brand-100: #ffe6cc;
+  --afr-brand-300: #ffb866;
+  --afr-brand-500: #f7862b;
+  --afr-brand-600: #e2670f;
+  --afr-brand-700: #b74e08;
+
+  /* Accent ramp: fresh herb green, used for healthy/veg signals. */
+  --afr-accent-300: #7fd6a3;
+  --afr-accent-500: #22a866;
+  --afr-accent-700: #14784a;
+
+  /* Semantic */
+  --afr-danger: #d94141;
+  --afr-warn: #d99321;
+  --afr-info: #2f7fd9;
+  --afr-ok: #22a866;
+
+  /* Surfaces */
+  --afr-bg: #fbf7f2;
+  --afr-bg-alt: #f4ece2;
+  --afr-surface: #ffffff;
+  --afr-surface-2: #fdfaf6;
+  --afr-border: #e7dccd;
+  --afr-border-strong: #d4c3ad;
+
+  /* Text */
+  --afr-text: #241c14;
+  --afr-text-muted: #6d6154;
+  --afr-text-faint: #94897c;
+  --afr-on-brand: #ffffff;
+
+  /* Glassmorphism */
+  --afr-glass-bg: rgba(255, 255, 255, 0.62);
+  --afr-glass-border: rgba(255, 255, 255, 0.75);
+  --afr-glass-blur: 16px;
+  --afr-glass-shadow: 0 8px 32px rgba(72, 45, 18, 0.12);
+
+  /* Elevation */
+  --afr-shadow-sm: 0 1px 2px rgba(60, 40, 20, 0.08);
+  --afr-shadow-md: 0 4px 16px rgba(60, 40, 20, 0.10);
+  --afr-shadow-lg: 0 16px 40px rgba(60, 40, 20, 0.16);
+
+  /* Geometry */
+  --afr-radius-sm: 8px;
+  --afr-radius: 14px;
+  --afr-radius-lg: 22px;
+  --afr-radius-pill: 999px;
+
+  /* Rhythm */
+  --afr-space-1: 4px;
+  --afr-space-2: 8px;
+  --afr-space-3: 12px;
+  --afr-space-4: 16px;
+  --afr-space-5: 24px;
+  --afr-space-6: 32px;
+  --afr-space-7: 48px;
+  --afr-space-8: 72px;
+
+  /* Type */
+  --afr-font-display: "Playfair Display", "Georgia", serif;
+  --afr-font-body: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Motion — all durations funnel through these so reduced-motion can zero them */
+  --afr-t-fast: 120ms;
+  --afr-t: 220ms;
+  --afr-t-slow: 420ms;
+  --afr-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Layout */
+  --afr-nav-h: 68px;
+  --afr-max-w: 1240px;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --afr-bg: #14100c;
+  --afr-bg-alt: #1c1712;
+  --afr-surface: #211b15;
+  --afr-surface-2: #2a221a;
+  --afr-border: #392f25;
+  --afr-border-strong: #4d4032;
+
+  --afr-text: #f4ece2;
+  --afr-text-muted: #b6a795;
+  --afr-text-faint: #8a7c6c;
+
+  --afr-glass-bg: rgba(33, 27, 21, 0.62);
+  --afr-glass-border: rgba(255, 255, 255, 0.10);
+  --afr-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+
+  --afr-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --afr-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --afr-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+
+  --afr-brand-500: #ff9d45;
+  --afr-brand-600: #f7862b;
+  --afr-accent-500: #47c489;
+
+  color-scheme: dark;
+}
+
+/* --------------------------------------------------------------------------
+   2. Reset / base
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--afr-nav-h) + 16px); }
+
+body {
+  margin: 0;
+  font-family: var(--afr-font-body);
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--afr-text);
+  background:
+    radial-gradient(1200px 600px at 12% -10%, var(--afr-brand-100) 0%, transparent 60%),
+    radial-gradient(900px 500px at 92% 4%, rgba(34, 168, 102, 0.14) 0%, transparent 55%),
+    var(--afr-bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--afr-t) var(--afr-ease), color var(--afr-t) var(--afr-ease);
+}
+
+[data-theme="dark"] body {
+  background:
+    radial-gradient(1200px 600px at 12% -10%, rgba(247, 134, 43, 0.16) 0%, transparent 60%),
+    radial-gradient(900px 500px at 92% 4%, rgba(34, 168, 102, 0.10) 0%, transparent 55%),
+    var(--afr-bg);
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--afr-font-display);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--afr-space-3);
+  color: var(--afr-text);
+}
+
+h1 { font-size: clamp(2.1rem, 5vw, 3.6rem); }
+h2 { font-size: clamp(1.6rem, 3.2vw, 2.4rem); }
+h3 { font-size: clamp(1.2rem, 2.2vw, 1.5rem); }
+h4 { font-size: 1.1rem; }
+
+p { margin: 0 0 var(--afr-space-3); }
+
+a { color: var(--afr-brand-600); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+img { max-width: 100%; display: block; }
+
+/* Focus ring — one consistent, high-contrast treatment everywhere. */
+:focus-visible {
+  outline: 3px solid var(--afr-brand-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Screen-reader-only text (labels for icon buttons, section landmarks). */
+.afr-sr {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
+}
+
+/* Skip link, revealed on keyboard focus. */
+.afr-skip {
+  position: absolute;
+  left: var(--afr-space-4);
+  top: -100px;
+  z-index: 2000;
+  background: var(--afr-brand-600);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: var(--afr-radius-sm);
+  transition: top var(--afr-t) var(--afr-ease);
+}
+.afr-skip:focus { top: var(--afr-space-4); }
+
+/* --------------------------------------------------------------------------
+   3. Layout primitives
+   -------------------------------------------------------------------------- */
+.afr-shell { max-width: var(--afr-max-w); margin-inline: auto; padding-inline: var(--afr-space-5); }
+
+.afr-section { padding-block: var(--afr-space-8); }
+.afr-section--tight { padding-block: var(--afr-space-6); }
+
+.afr-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--afr-space-4);
+  margin-bottom: var(--afr-space-5);
+  flex-wrap: wrap;
+}
+.afr-section-head p { color: var(--afr-text-muted); margin: 0; max-width: 62ch; }
+.afr-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--afr-brand-600);
+  margin-bottom: var(--afr-space-2);
+}
+
+/* Responsive auto-grid used by every card rail on the site. */
+.afr-grid {
+  display: grid;
+  gap: var(--afr-space-4);
+  grid-template-columns: repeat(auto-fill, minmax(var(--afr-col, 250px), 1fr));
+}
+.afr-grid--wide { --afr-col: 320px; }
+.afr-grid--narrow { --afr-col: 170px; }
+
+/* Two-column split that collapses on small screens. */
+.afr-split {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--afr-space-6);
+  align-items: center;
+}
+@media (max-width: 860px) { .afr-split { grid-template-columns: 1fr; } }
+
+/* Grid and flex children default to min-width:auto, which lets long content
+   push a container wider than the viewport. This is the app-wide guard against
+   horizontal page scroll — every multi-column container opts in here. */
+.afr-grid > *,
+.afr-split > *,
+.afr-hero__grid > *,
+.afr-section-head > *,
+.afr-shell > * { min-width: 0; }
+
+/* --------------------------------------------------------------------------
+   4. Reduced motion — respected globally.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  :root { --afr-t-fast: 0ms; --afr-t: 0ms; --afr-t-slow: 0ms; }
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
