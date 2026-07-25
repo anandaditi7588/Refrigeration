@@ -169,7 +169,156 @@
     },
   };
 
+  /* ======================================================================
+     Real photography
+     ----------------------------------------------------------------------
+     The renderer asks for images synchronously (AFR.images.dish(name) returns
+     a string), but photo APIs are async. So the recipe service calls
+     `prefetch()` once before generating, which fills these caches; every
+     lookup afterwards is an instant cache hit, and anything not covered falls
+     back to the drawn plate. That keeps one code path for both modes.
+     ====================================================================== */
+
+  const photos = {
+    pool: [],              // photos of the dish, shared by hero/steps/gallery
+    byLabel: new Map(),    // exact overrides, e.g. the hero shot
+    credits: [],           // attribution records for the sources section
+  };
+
+  /* Ingredient photos are reused across recipes, so they persist. */
+  const INGREDIENT_CACHE_KEY = 'photos:ingredients';
+  let ingredientCache = null;
+
+  function loadIngredientCache() {
+    if (!ingredientCache) ingredientCache = AFR.store.get(INGREDIENT_CACHE_KEY, {}) || {};
+    return ingredientCache;
+  }
+
+  function saveIngredientCache() {
+    if (ingredientCache) AFR.store.set(INGREDIENT_CACHE_KEY, ingredientCache);
+  }
+
+  /** Deterministic pick from the pool, so a given step always gets one image. */
+  function fromPool(label) {
+    if (!photos.pool.length) return null;
+    return photos.pool[U.hash(label) % photos.pool.length].url;
+  }
+
+  function recordCredit(photo) {
+    if (!photo || !photo.credit) return;
+    if (photos.credits.some((c) => c.credit === photo.credit)) return;
+    photos.credits.push({ credit: photo.credit, url: photo.creditUrl || '', source: photo.source });
+  }
+
+  /** Run promises with a small concurrency cap — API rate limits are real. */
+  async function mapLimit(items, limit, worker) {
+    const out = [];
+    let index = 0;
+    const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (index < items.length) {
+        const i = index++;
+        try { out[i] = await worker(items[i]); } catch (_) { out[i] = null; }
+      }
+    });
+    await Promise.all(runners);
+    return out;
+  }
+
+  /**
+   * Fetch real photography for a dish, ahead of rendering.
+   *
+   * @param {object} spec { dish, cuisine, videos }
+   * @returns {Promise<{count:number, warnings:string[]}>}
+   */
+  async function prefetch(spec = {}) {
+    photos.pool = [];
+    photos.byLabel.clear();
+    photos.credits = [];
+
+    const warnings = [];
+    const providerName = AFR.config.providers.photo || 'local';
+    if (providerName === 'local') return { count: 0, warnings };
+
+    const provider = AFR.registry.resolve('photo');
+    if (!provider) return { count: 0, warnings: ['No photo provider registered'] };
+
+    const dish = U.clean(spec.dish || '');
+    const cuisine = spec.cuisine ? `${spec.cuisine} ` : '';
+
+    /* ---- dish photography ---- */
+    try {
+      const found = await provider.search(`${cuisine}${dish} food dish`, {
+        count: AFR.config.images.photosPerRecipe,
+        videos: spec.videos || [],
+        orientation: 'landscape',
+      });
+      photos.pool = (found || []).filter((p) => p && p.url);
+      photos.pool.forEach(recordCredit);
+
+      /* The best shot becomes the hero rather than a hashed pick. */
+      if (photos.pool.length) {
+        photos.byLabel.set(`dish|${dish}`, photos.pool[0].url);
+      }
+    } catch (err) {
+      warnings.push(`Photos (${provider.id}): ${err.message}`);
+    }
+
+    return { count: photos.pool.length, warnings };
+  }
+
+  /**
+   * Photos for the ~18 ingredients a recipe actually uses, run AFTER generation
+   * so we never pay for the whole 120-item pantry. Results persist in
+   * localStorage, so repeat ingredients cost nothing on later recipes.
+   *
+   * @param {string[]} names ingredient names from the generated recipe
+   * @returns {Promise<number>} how many now have a photograph
+   */
+  async function prefetchIngredients(names) {
+    if (!AFR.config.images.ingredientPhotos || !names || !names.length) return 0;
+
+    const provider = AFR.registry._all.photo[AFR.config.providers.ingredientPhoto]
+      || AFR.registry._all.photo.wikimedia;
+    if (!provider || provider.id === 'local') return 0;
+
+    const cache = loadIngredientCache();
+    const wanted = U.unique(names);
+    const misses = wanted.filter((name) => cache[name] === undefined);
+
+    await mapLimit(misses, 4, async (name) => {
+      try {
+        const hits = await provider.search(`${name} food ingredient`, { count: 1, width: 320 });
+        cache[name] = (hits && hits[0] && hits[0].url)
+          ? { url: hits[0].url, credit: hits[0].credit, creditUrl: hits[0].creditUrl }
+          : { url: '' }; // remember the miss so we do not ask again
+      } catch (_) {
+        /* leave uncached, so a later run can retry after a rate limit */
+      }
+    });
+    saveIngredientCache();
+
+    let count = 0;
+    wanted.forEach((name) => {
+      const hit = cache[name];
+      if (hit && hit.url) {
+        photos.byLabel.set(`ingredient|${name}`, hit.url);
+        recordCredit(hit);
+        count++;
+      }
+    });
+    return count;
+  }
+
   function resolve(spec) {
+    /* A real photograph always wins over the drawn plate. */
+    const exact = photos.byLabel.get(`${spec.kind}|${spec.label}`);
+    if (exact) return exact;
+
+    if (photos.pool.length && spec.kind !== 'ingredient' && spec.kind !== 'equipment') {
+      const pooled = fromPool(`${spec.kind}|${spec.label}`);
+      if (pooled) return pooled;
+    }
+
     const name = (AFR.config.providers.image) || 'local';
     const provider = providers[name] || providers.local;
     try { return provider(spec); } catch (_) { return providers.local(spec); }
@@ -179,6 +328,28 @@
 
   AFR.images = {
     glyphFor,
+    prefetch,
+    prefetchIngredients,
+
+    /** Attribution records for whatever photography ended up being used. */
+    credits() { return photos.credits.slice(); },
+
+    /** True when the current recipe is showing real photographs. */
+    usingPhotos() { return photos.pool.length > 0 || photos.byLabel.size > 0; },
+
+    /** Drop cached photography (used when switching provider in setup). */
+    reset() {
+      photos.pool = [];
+      photos.byLabel.clear();
+      photos.credits = [];
+    },
+
+    /** Forget every cached ingredient photo, e.g. after changing provider. */
+    clearIngredientCache() {
+      ingredientCache = {};
+      AFR.store.set(INGREDIENT_CACHE_KEY, {});
+    },
+
 
     /** Hero / card image for a dish. */
     dish(name, opts = {}) {

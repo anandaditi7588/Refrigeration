@@ -268,6 +268,20 @@
       global.scrollTo({ top, behavior: 'smooth' });
     },
 
+    /**
+     * A remote photograph can 404 or be blocked. Rather than leave a broken
+     * image, swap in the drawn plate for that subject. `error` does not bubble,
+     * so this listens in the capture phase.
+     */
+    initImageFallback(root = document) {
+      root.addEventListener('error', (event) => {
+        const img = event.target;
+        if (!img || img.tagName !== 'IMG' || img.dataset.fellBack) return;
+        img.dataset.fellBack = '1';
+        img.src = AFR.images.dish(img.alt || 'dish');
+      }, true);
+    },
+
     /** Print helper: expand every accordion first so nothing is lost on paper. */
     printPage(root = document) {
       UI.qsa('.afr-acc', root).forEach((acc) => {
@@ -282,6 +296,7 @@
   /* Boot the pieces every page needs. Pages add their own logic on top. */
   document.addEventListener('DOMContentLoaded', () => {
     UI.initTheme();
+    UI.initImageFallback();
     UI.initNavScroll();
     UI.markCurrentNav();
     UI.initReveal();

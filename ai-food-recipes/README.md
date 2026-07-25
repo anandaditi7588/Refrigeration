@@ -29,6 +29,7 @@ rather than ES modules specifically so that `file://` doesn't break on CORS.
 | `index.html` | Hero, search, categories, 10 curated recipe rails, regional cuisines, footer |
 | `create.html` | **Create Your Own Dish** — the 16-step wizard and the 20-section recipe output |
 | `saved.html`  | Bookmarked recipes (localStorage only) |
+| `setup.html`  | Connect live data — tests your API keys against the real endpoints |
 
 Home page cards are *starting points*, not stored recipes: every card hands its dish to the wizard,
 so there is exactly one generation path in the app.
@@ -106,10 +107,11 @@ ai-food-recipes/
         │   ├── ai-local.js              built-in offline engine (default)
         │   ├── ai-remote.js             OpenAI · Gemini · Claude · your proxy
         │   ├── video-providers.js       YouTube Data API · offline search links
+        │   ├── photo-providers.js       Pexels · Unsplash · Wikimedia · YouTube thumbs
         │   ├── recipe-api-providers.js  Spoonacular · Edamam · your aggregator
         │   └── registry.js              capability → provider lookup
         ├── components/  recipe-card · wizard · recipe-view
-        └── pages/       home · create · saved
+        └── pages/       home · create · saved · setup
 ```
 
 ### How a recipe gets made
@@ -143,26 +145,70 @@ oil absorbed during frying.
 
 ---
 
-## Wiring up a real API
+## Live data: real YouTube results and real photographs
 
-Everything lives in `assets/js/core/config.js`. Nothing else in the app reads a key.
+By default the app runs **entirely offline** — recipes come from its own knowledge base and
+images are drawn rather than photographed. Two free keys switch that to live data.
+
+Open **`setup.html`** in the running app: it lists every provider, tells you where to get the
+key and what the free tier allows, and **tests your key against the real API**, showing the
+actual response or the actual error. Start there rather than editing files blind.
+
+> It must be served over `http://`, not opened as a `file://` page — browsers block API calls
+> from `file://`, and a published Artifact page blocks them too.
+
+### What each key gives you
+
+| Provider | Key | Free tier | Gives you |
+|---|---|---|---|
+| **YouTube Data API v3** | required | 10,000 units/day ≈ 90 searches | Real videos: titles, channels, durations, view counts, publish dates, thumbnails |
+| **Pexels** | required | 200/hour | Real food photography for the hero, gallery and every cooking step |
+| **Unsplash** | required | 50/hour (demo) | Same, alternative source. Credits the photographer automatically |
+| **Wikimedia Commons** | **none** | unlimited | Ingredient photographs. Already the default |
+| **Spoonacular / Edamam** | required | 150 points/day | Recipe references and cooking-time cross-checks |
+
+### Getting a YouTube key
+
+1. <https://console.cloud.google.com> → create or pick a project
+2. **APIs & Services → Library** → search "YouTube Data API v3" → **Enable**
+3. **APIs & Services → Credentials → Create credentials → API key**
+4. Recommended: **Restrict key → Application restrictions → HTTP referrers**, and add the
+   origin you serve from (`http://localhost:8080/*`, or your domain). This is what makes a
+   browser-side key safe to ship.
+5. Paste it into `setup.html` and press **Test connection**.
+
+### Then make it permanent
+
+In `assets/js/core/config.js`:
 
 ```js
-AFR.config.providers.ai     = 'openai';   // 'openai' | 'gemini' | 'claude' | 'proxy' | 'local'
-AFR.config.providers.video  = 'youtube';  // 'youtube' | 'local'
-AFR.config.providers.recipe = 'spoonacular'; // 'spoonacular' | 'edamam' | 'proxy' | 'local'
+providers: {
+  ai:              'local',      // or 'openai' | 'gemini' | 'claude' | 'proxy'
+  video:           'youtube',    // real YouTube search
+  photo:           'pexels',     // real photography
+  ingredientPhoto: 'wikimedia',  // keyless ingredient photos
+  recipe:          'local',      // or 'spoonacular' | 'edamam'
+},
+keys: { youtube: 'AIza...', pexels: '...' },
 ```
 
-**In production, do not put vendor keys in this file** — it ships to every visitor. Point the app at
-a small server of your own that holds the secrets:
+**No key for photos?** Set `photo: 'youtube'`. It reuses the thumbnails from the video search
+you are already doing, so it costs nothing extra — and the picture is genuinely of that dish,
+because it comes from a video about it.
 
-```js
-AFR.config.endpoints.ai = 'https://api.example.com/ai/recipe';
-AFR.config.providers.ai = 'proxy';
-```
+### How the images actually work
 
-Your endpoint receives `{ answers, brief }` and returns the recipe JSON (or `{ recipe: {...} }`).
-The `keys` block exists for local development only.
+Photo APIs are async, but the renderer asks for image URLs synchronously while building the
+recipe. So the orchestrator fetches a pool of dish photos **before** generation and the
+lookups afterwards are cache hits. Ingredient photos run **after** generation, once we know
+which ~18 the recipe actually uses, and persist in `localStorage` — so a repeated dish costs
+zero lookups and a new dish only fetches ingredients it has not seen.
+
+Anything that fails — no key, rate limit, a 404 on one image — falls back to the drawn plate
+for that picture and records a visible warning. A photo outage never blocks a recipe.
+
+Photographers are credited in Section 17. Unsplash's API terms require this; it is carried
+through for Pexels and Wikimedia too.
 
 ### Adding your own provider
 
@@ -178,13 +224,21 @@ AFR.registry.register('ai', {
 AFR.config.providers.ai = 'my-model';
 ```
 
-`AFR.schema.normalise()` is deliberately forgiving — a model that omits a field or returns a string
-where an array belongs degrades to an empty section rather than a blank page. Fields a language model
-shouldn't waste tokens on (images, cost, shopping list, customisation summary) are filled in locally,
-and nutrition is recomputed if the model's figures contradict its own ingredient list.
+`AFR.schema.normalise()` is deliberately forgiving — a model that omits a field or returns a
+string where an array belongs degrades to an empty section rather than a blank page. Fields a
+language model shouldn't waste tokens on (images, cost, shopping list, customisation summary)
+are filled in locally, and nutrition is recomputed if the model's figures contradict its own
+ingredient list.
 
-Remote providers fall back to the built-in engine automatically if the network call fails, with a
-visible note explaining what happened.
+Remote providers fall back to the built-in engine automatically if the network call fails,
+with a visible note explaining what happened.
+
+### Keys in front-end code
+
+Anything in `config.js` ships to every visitor. That is fine for a YouTube key restricted to
+your own domain, and fine for a personal or local project. For anything public and billable,
+point `endpoints.ai` / `endpoints.video` at a small server of your own that holds the secrets
+and set the matching provider to `proxy`.
 
 ---
 
@@ -204,10 +258,10 @@ actions, and a tickable shopping list.
 
 ### Images
 
-The default image provider paints deterministic SVG plates as data URIs: no network requests, no
-broken images, no licensing questions, and the same dish always looks the same. Swap
-`AFR.config.providers.image` to serve real photography instead — every caller goes through
-`AFR.images.*`, so nothing else changes.
+Out of the box the image provider paints deterministic SVG plates as data URIs: no network
+requests, no broken images, no licensing questions, and the same dish always looks the same.
+Set `providers.photo` to `pexels`, `unsplash` or `youtube` for real photography — see
+**Live data** above. Every caller goes through `AFR.images.*`, so nothing else changes.
 
 ---
 

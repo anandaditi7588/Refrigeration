@@ -79,13 +79,17 @@
     const videoProvider = AFR.registry.resolve('video');
     const recipeProvider = AFR.registry.resolve('recipe');
 
-    const videoPromise = attempt('YouTube', async () => {
+    /* YouTube is source priority #1 in the brief, and its thumbnails can also
+       supply the photography, so it is awaited before generation rather than
+       raced against it. Everything else still runs in parallel. */
+    const videos = await attempt('YouTube', async () => {
       const result = await videoProvider.search(searchQuery, {
         max: AFR.config.generation.maxVideos, dish, cuisine: cuisine.name,
       });
       if (result && result.length) sourcesUsed.push(`video:${videoProvider.id}`);
       return result;
-    }, warnings);
+    }, warnings) || [];
+    advance(1, 0.55);
 
     const referencePromise = attempt('Recipe sources', async () => {
       const diet = (answers.diet || []).find((d) => ['vegetarian', 'vegan', 'gluten-free', 'keto', 'paleo'].includes(d));
@@ -96,6 +100,25 @@
       if (result && result.length) sourcesUsed.push(`recipe:${recipeProvider.id}`);
       return result;
     }, warnings);
+
+    /* Real photography, fetched before generation because the renderer asks
+       for image URLs synchronously while the recipe is being built. */
+    let photoReport = { count: 0, ingredientCount: 0, warnings: [] };
+    if (AFR.config.providers.photo && AFR.config.providers.photo !== 'local') {
+      onStage('sources', 'Finding photographs');
+      advance(1, 0.75);
+      photoReport = await attempt('Photos', () => AFR.images.prefetch({
+        dish,
+        cuisine: cuisine.id === 'global' ? '' : cuisine.name,
+        videos,
+      }), warnings) || photoReport;
+
+      warnings.push(...(photoReport.warnings || []));
+      if (photoReport.count) sourcesUsed.push(`photo:${AFR.config.providers.photo}`);
+    } else {
+      AFR.images.reset();
+    }
+    advance(1, 1);
 
     /* --------------------------------------------------- 3. recipe body */
     onStage('generate', STAGES[2].label);
@@ -127,7 +150,7 @@
     onStage('nutrition', STAGES[3].label);
     advance(3, 0.3);
 
-    const [videos, references] = await Promise.all([videoPromise, referencePromise]);
+    const references = await referencePromise;
 
     recipe.videos = (videos || []).map((v) =>
       Object.assign({ thumb: AFR.images.video(v.title || dish) }, v));
@@ -135,6 +158,33 @@
     recipe.sources = buildSources(recipe, references, videos, {
       videoProvider, recipeProvider, aiProvider, dish, cuisine,
     });
+
+    /* Ingredient photos come last, once we know which ~18 the recipe uses --
+       fetching the whole pantry up front would be dozens of wasted requests. */
+    if (photoReport.count || AFR.config.providers.photo !== 'local') {
+      const named = await attempt('Ingredient photos',
+        () => AFR.images.prefetchIngredients(recipe.ingredients.map((i) => i.name)), warnings);
+      if (named) {
+        recipe.ingredients = recipe.ingredients.map((line) => Object.assign({}, line, {
+          image: AFR.images.ingredient(line.name),
+        }));
+        sourcesUsed.push(`ingredientPhoto:${AFR.config.providers.ingredientPhoto}`);
+      }
+    }
+
+    /* Photographers must be credited — Unsplash's terms require it, and it is
+       the right thing to do for Wikimedia and Pexels too. */
+    const credits = AFR.images.credits();
+    if (credits.length) {
+      recipe.sources.push({
+        type: 'photo',
+        title: `Photography: ${credits.slice(0, 4).map((c) => c.credit).join(', ')}`
+          + (credits.length > 4 ? ` and ${credits.length - 4} more` : ''),
+        url: credits[0].url || '',
+        note: `Images supplied live by ${AFR.config.providers.photo}.`,
+      });
+      recipe.meta.photoCredits = credits;
+    }
 
     /* Cross-check our timing against structured API data where we have it.
        We report the discrepancy rather than silently overwriting our own

@@ -24,6 +24,7 @@
     ai: {},
     video: {},
     recipe: {},
+    photo: {},
   };
 
   function register(capability, provider) {
@@ -64,6 +65,12 @@
 
   if (P.videoLocal) register('video', P.videoLocal);
   if (P.videoYoutube) register('video', P.videoYoutube);
+
+  if (P.photoLocal) register('photo', P.photoLocal);
+  if (P.photoPexels) register('photo', P.photoPexels);
+  if (P.photoUnsplash) register('photo', P.photoUnsplash);
+  if (P.photoWikimedia) register('photo', P.photoWikimedia);
+  if (P.photoYoutube) register('photo', P.photoYoutube);
 
   if (P.recipeLocal) register('recipe', P.recipeLocal);
   if (P.recipeSpoonacular) register('recipe', P.recipeSpoonacular);

@@ -29,9 +29,15 @@
        default so the app is fully functional out of the box. */
     providers: {
       ai: 'local',
-      video: 'local',
+      video: 'local',        // 'youtube' for live video search
       recipe: 'local',
-      image: 'local',
+      image: 'local',        // drawn-plate fallback painter
+      /* Real photography. 'youtube' reuses the video thumbnails you already
+         fetched (no extra key); 'pexels' / 'unsplash' need their own free key. */
+      photo: 'local',        // 'youtube' | 'pexels' | 'unsplash' | 'wikimedia'
+      /* Ingredient tiles are generic objects, so they default to the keyless
+         Wikimedia Commons source regardless of the dish photo provider. */
+      ingredientPhoto: 'wikimedia',
     },
 
     /* Preferred, safe integration path: a small server of yours that holds the
@@ -50,9 +56,10 @@
       gemini: '',
       claude: '',
       youtube: '',
+      pexels: '',
+      unsplash: '',
       spoonacular: '',
       edamam: { appId: '', appKey: '' },
-      unsplash: '',
     },
 
     /* Model defaults per vendor, kept out of the adapter code so they can be
@@ -73,6 +80,15 @@
       maxSources: 8,
       minStepCount: 6,
       simulateLatencyMs: 1500, // local provider only: keeps the progress UI honest-looking
+    },
+
+    images: {
+      /* How many dish photos to pull per recipe. They are shared across the
+         hero, gallery, preparation and cooking steps. */
+      photosPerRecipe: 12,
+      /* Look up a photo for each ingredient. Keyless via Wikimedia and cached
+         in localStorage, so the cost falls away after the first few recipes. */
+      ingredientPhotos: true,
     },
 
     ui: {
