@@ -171,6 +171,12 @@ img { max-width: 100%; display: block; }
   border-radius: 4px;
 }
 
+/* `[hidden]` is only a user-agent style, so any author rule that sets `display`
+   silently beats it — which left the "no last recipe" banner and the Skip
+   button on required steps visible. Everything in the app hides via the
+   attribute, so enforce it once here. */
+[hidden] { display: none !important; }
+
 /* Screen-reader-only text (labels for icon buttons, section landmarks). */
 .afr-sr {
   position: absolute !important;
