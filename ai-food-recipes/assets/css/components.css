@@ -790,9 +790,15 @@
    photograph — when one is available — fills the same frame cleanly. */
 /* Qualified with the table and the tag on purpose: `.afr-table img` above is
    (0,1,1) and would otherwise outrank a lone class however far down it sits. */
+/* The image column is auto-sized, and the global `img { max-width: 100% }`
+   shrinks the thumbnail to whatever width the column happened to take. Give
+   the column a size and opt this image out of the global clamp. */
+.afr-table td:first-child { width: 84px; }
+
 .afr-table img.afr-ing-img,
 img.afr-ing-img {
   width: 68px; height: 68px;
+  max-width: none;
   border-radius: 14px;
   object-fit: cover;
   display: block;

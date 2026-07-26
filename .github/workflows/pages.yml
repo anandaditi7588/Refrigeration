@@ -1,0 +1,52 @@
+# Publishes the AI Food Recipes app to GitHub Pages.
+#
+# Why: the app is a static site, but several of its best features need the
+# browser to make real network requests — Wikimedia and TheMealDB photographs,
+# machine translation, YouTube search, and a hosted or open-source AI model.
+# A published Artifact page blocks all of those under its CSP, and a local
+# server is only reachable from the machine it runs on. Pages gives a real
+# URL where everything works and anyone can open it.
+#
+# Only the app folder is published; the rest of the repository is not.
+name: Deploy AI Food Recipes to Pages
+
+on:
+  push:
+    branches: [claude/ai-food-recipes-app-dobh01]
+    paths: ['ai-food-recipes/**', '.github/workflows/pages.yml']
+  # So the site can be re-published without waiting for a code change.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; keep the newest, let a running one finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # `enablement: true` switches Pages on the first time this runs, so the
+      # repository needs no manual settings change.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # Publish the app folder as the site root, so the site serves
+      # index.html rather than a directory listing of the repository.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ai-food-recipes
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
