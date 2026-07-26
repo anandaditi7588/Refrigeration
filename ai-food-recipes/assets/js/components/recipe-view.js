@@ -91,7 +91,7 @@
   function ingredients(recipe) {
     const rows = recipe.ingredients.map((i) => `
       <tr>
-        <td data-label="Image">${img(i.image, i.name)}</td>
+        <td data-label="Image">${img(i.image, i.name, 'afr-ing-img')}</td>
         <td data-label="Ingredient">
           <strong>${e(i.name)}</strong>
           ${i.have ? ` ${chip('You have this', 'afr-chip--veg')}` : ''}

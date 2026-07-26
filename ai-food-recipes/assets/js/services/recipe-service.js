@@ -175,7 +175,7 @@
         () => AFR.images.prefetchIngredients(recipe.ingredients.map((i) => i.name)), warnings);
       if (named) {
         recipe.ingredients = recipe.ingredients.map((line) => Object.assign({}, line, {
-          image: AFR.images.ingredient(line.name),
+          image: AFR.images.ingredient(line.name, { item: line.item }),
         }));
         sourcesUsed.push(`ingredientPhoto:${AFR.config.providers.ingredientPhoto}`);
       }

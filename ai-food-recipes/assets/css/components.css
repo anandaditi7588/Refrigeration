@@ -785,6 +785,25 @@
 }
 .afr-banner i { color: var(--afr-info); margin-top: 3px; }
 
+/* Ingredient thumbnails. Big enough that the produce illustration reads as a
+   picture of the thing rather than a placeholder icon, and sized so a real
+   photograph — when one is available — fills the same frame cleanly. */
+/* Qualified with the table and the tag on purpose: `.afr-table img` above is
+   (0,1,1) and would otherwise outrank a lone class however far down it sits. */
+.afr-table img.afr-ing-img,
+img.afr-ing-img {
+  width: 68px; height: 68px;
+  border-radius: 14px;
+  object-fit: cover;
+  display: block;
+  background: var(--afr-bg-alt);
+  box-shadow: 0 1px 3px rgba(60, 40, 20, 0.14);
+  transition: transform var(--afr-t-fast, 140ms) ease;
+}
+.afr-table tbody tr:hover .afr-ing-img { transform: scale(1.06); }
+@media (max-width: 720px) { .afr-ing-img { width: 56px; height: 56px; } }
+@media (prefers-reduced-motion: reduce) { .afr-ing-img { transition: none; } }
+
 /* Used when the app does not know the dish it was asked for. Deliberately
    louder than an informational banner: the reader has to register this before
    they read the recipe as an answer. */

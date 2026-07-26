@@ -63,7 +63,7 @@
       return Object.assign({}, line, {
         item,
         grams,
-        image: line.image || AFR.images.ingredient(line.name),
+        image: line.image || AFR.images.ingredient(line.name, { item }),
         group: line.group || item.group,
         substitute: line.substitute || item.substitute,
         healthy: line.healthy || item.healthy,

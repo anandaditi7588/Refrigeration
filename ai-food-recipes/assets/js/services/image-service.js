@@ -393,8 +393,24 @@
     },
 
     /** Small square tile for an ingredient row. */
+    /**
+     * Order of preference: a real photograph if one was fetched, then a drawn
+     * illustration of that specific ingredient, then the generic plate.
+     *
+     * The middle step matters most on a published Artifact page, which blocks
+     * every external request — there, the illustration is all there is, and an
+     * emoji in a tinted square looked like a missing image rather than a
+     * deliberate one.
+     */
     ingredient(name, opts = {}) {
-      return resolve({ label: name, kind: 'ingredient', w: 160, h: 160, ...opts });
+      const photo = resolve({ label: name, kind: 'ingredient', w: 160, h: 160, ...opts });
+      /* resolve() returns a drawn plate when no photo is cached; only that
+         case is worth replacing with something better. */
+      if (photo && !photo.startsWith('data:')) return photo;
+
+      const drawn = AFR.produceArt
+        && AFR.produceArt.ingredient(name, opts.item, opts.w || 160);
+      return drawn || photo;
     },
 
     equipment(name, opts = {}) {

@@ -422,7 +422,7 @@
         purpose: purpose || item.purpose,
         substitute: item.substitute,
         healthy: item.healthy,
-        image: AFR.images.ingredient(item.name),
+        image: AFR.images.ingredient(item.name, { item }),
         group: item.group,
         grams,
         have: availableIds.has(item.id),
