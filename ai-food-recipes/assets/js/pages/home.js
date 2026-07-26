@@ -12,12 +12,18 @@
   function heroArt() {
     const host = UI.qs('[data-home="hero-art"]');
     if (!host) return;
-    const picks = ['Chicken Biryani', 'Margherita Pizza', 'Pad Thai', 'Chocolate Brownies'];
-    host.innerHTML = picks.map((name, i) => `
+    /* Dishes chosen to be visually distinct from each other and easy for a
+       photo source to match — this is the first thing anyone sees. */
+    const picks = ['Chicken Biryani', 'Margherita Pizza', 'Pad Thai', 'Chocolate Brownie'];
+    host.innerHTML = picks.map((name, i) => {
+      const drawn = AFR.images.dish(name);
+      return `
       <div class="afr-hero__tile">
-        <img src="${U.esc(AFR.images.dish(name))}" alt="${U.esc(name)}"
-             loading="${i < 2 ? 'eager' : 'lazy'}" decoding="async">
-      </div>`).join('');
+        <img src="${U.esc(drawn)}" alt="${U.esc(name)}"
+             loading="${i < 2 ? 'eager' : 'lazy'}" decoding="async"
+             ${drawn.startsWith('data:') ? `data-dish-photo="${U.esc(name)}"` : ''}>
+      </div>`;
+    }).join('');
   }
 
   /* ------------------------------------------------------------- search */
