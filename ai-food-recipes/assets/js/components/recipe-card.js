@@ -45,7 +45,8 @@
     node.innerHTML = `
       <div class="afr-card__media">
         <img src="${U.esc(img)}" alt="${U.esc(recipe.name)}"
-             loading="${opts.eager ? 'eager' : 'lazy'}" decoding="async">
+             loading="${opts.eager ? 'eager' : 'lazy'}" decoding="async"
+             ${img.startsWith('data:') ? `data-dish-photo="${U.esc(recipe.name)}"` : ''}>
         <div class="afr-card__tags">
           ${diet ? `<span class="afr-chip ${diet.class}"><i class="fa-solid ${diet.icon}" aria-hidden="true"></i>${diet.label}</span>` : ''}
           ${recipe.difficulty ? `<span class="afr-chip">${U.esc(recipe.difficulty)}</span>` : ''}

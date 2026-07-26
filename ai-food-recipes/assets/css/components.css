@@ -785,6 +785,13 @@
 }
 .afr-banner i { color: var(--afr-info); margin-top: 3px; }
 
+/* A card photograph arriving over its drawn placeholder. Fading rather than
+   swapping keeps a long scroll calm — 74 cards popping would be a flicker
+   storm. */
+.afr-card__img--photo { animation: afr-photo-in 320ms ease both; }
+@keyframes afr-photo-in { from { opacity: 0.35; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .afr-card__img--photo { animation: none; } }
+
 /* Ingredient thumbnails. Big enough that the produce illustration reads as a
    picture of the thing rather than a placeholder icon, and sized so a real
    photograph — when one is available — fills the same frame cleanly. */

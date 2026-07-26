@@ -303,9 +303,9 @@
   async function prefetchIngredients(names) {
     if (!AFR.config.images.ingredientPhotos || !names || !names.length) return 0;
 
-    const provider = AFR.registry._all.photo[AFR.config.providers.ingredientPhoto]
-      || AFR.registry._all.photo.wikimedia;
-    if (!provider || provider.id === 'local') return 0;
+    const provider = photoProvider(AFR.config.providers.ingredientPhoto)
+      || photoProvider('wikimedia');
+    if (!provider) return 0;
 
     const cache = loadIngredientCache();
     const wanted = U.unique(names);
@@ -345,6 +345,95 @@
     return count;
   }
 
+  /* ---------------------------------------------------------------------- */
+  /* Dish photos for browsing cards                                         */
+  /* ---------------------------------------------------------------------- */
+  /* The home page shows 74 cards. Fetching a photo for every one on load
+     would be 74 requests nobody asked for, so this is deliberately pull-based:
+     the card component asks only for cards the visitor actually scrolls to.
+     Results persist, so the second visit is free. */
+
+  /**
+   * Find a photo provider by its config name.
+   *
+   * Deliberately does NOT go through AFR.registry: the registry is only loaded
+   * on pages that generate recipes, and the browsing pages need photos too.
+   * Looking one up through the registry here is what made the home page fetch
+   * nothing at all.
+   *
+   * @returns {object|null} the provider, or null when photos are switched off
+   *          or the provider file was not loaded on this page.
+   */
+  function photoProvider(name) {
+    if (!name || name === 'local') return null;
+
+    const direct = AFR.registry && AFR.registry._all && AFR.registry._all.photo
+      && AFR.registry._all.photo[name];
+    if (direct) return direct.id === 'local' ? null : direct;
+
+    /* photo-providers.js publishes them as AFR.providers.photoWikimedia etc. */
+    const key = `photo${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+    const fallback = AFR.providers && AFR.providers[key];
+    return fallback && fallback.id !== 'local' ? fallback : null;
+  }
+
+  const DISH_CACHE_KEY = 'photos:dishes';
+  let dishCache = null;
+  let dishNetworkDown = false;
+
+  function loadDishCache() {
+    if (!dishCache) dishCache = AFR.store.get(DISH_CACHE_KEY, {}) || {};
+    return dishCache;
+  }
+
+  /* Written on a timer rather than per photo: a page of cards resolves in a
+     burst and localStorage writes are synchronous. */
+  let dishSaveTimer = null;
+  function saveDishCacheSoon() {
+    if (dishSaveTimer) clearTimeout(dishSaveTimer);
+    dishSaveTimer = setTimeout(() => {
+      dishSaveTimer = null;
+      if (dishCache) AFR.store.set(DISH_CACHE_KEY, dishCache);
+    }, 400);
+  }
+
+  /**
+   * A photograph for one dish, by name.
+   *
+   * @param {string} name dish name as shown on the card
+   * @returns {Promise<string>} a photo URL, or '' when there is none. A miss is
+   *          cached too, so a dish Commons has never heard of is asked once.
+   */
+  async function photoForDish(name) {
+    const key = String(name || '').trim();
+    if (!key) return '';
+
+    const cache = loadDishCache();
+    const hit = cache[key];
+    if (hit !== undefined) return hit.url || '';
+
+    if (dishNetworkDown) return '';
+    const provider = photoProvider(AFR.config.providers.photo);
+    if (!provider) return '';
+
+    try {
+      const hits = await provider.search(`${key} food dish`, { count: 3, width: 640 });
+      const best = (hits && hits[0]) || null;
+      cache[key] = best
+        ? { url: best.url, credit: best.credit, creditUrl: best.creditUrl }
+        : { url: '' };
+      saveDishCacheSoon();
+      if (best) recordCredit(best);
+      return cache[key].url || '';
+    } catch (err) {
+      /* One network-level failure means they will all fail — stop asking. */
+      if (/failed to fetch|networkerror|timed out|load failed/i.test(err.message || '')) {
+        dishNetworkDown = true;
+      }
+      return '';
+    }
+  }
+
   function resolve(spec) {
     /* A real photograph always wins over the drawn plate. */
     const exact = photos.byLabel.get(`${spec.kind}|${spec.label}`);
@@ -366,6 +455,8 @@
     glyphFor,
     prefetch,
     prefetchIngredients,
+    photoForDish,
+    clearDishCache() { dishCache = {}; AFR.store.set(DISH_CACHE_KEY, {}); },
 
     /** Attribution records for whatever photography ended up being used. */
     credits() { return photos.credits.slice(); },
