@@ -234,49 +234,85 @@
   /* ---------------------------------------------------------------------- */
 
   /**
-   * Translate a finished recipe in place.
+   * Translate a list of strings. The single implementation behind both the
+   * recipe body and the interface, so they share one cache, one circuit
+   * breaker and one set of network manners.
    *
-   * @param {object} recipe   a normalised recipe (mutated)
-   * @param {string} language target language code
-   * @param {object} hooks    { onProgress(fraction) }
-   * @returns {Promise<{translated:number, cached:number, failed:number, provider:string, warnings:string[]}>}
+   * @param {string[]} texts    may contain duplicates; they cost nothing extra
+   * @param {string} language   target language code
+   * @param {object} hooks      { onProgress(fraction) }
+   * @returns {Promise<{map: Map<string,string>, report: object}>}
+   *          `map` always has an entry for every input — the original string
+   *          when translation was unavailable, so callers never handle null.
    */
-  async function translateRecipe(recipe, language, hooks = {}) {
+  async function translateStrings(texts, language, hooks = {}) {
     const onProgress = hooks.onProgress || (() => {});
     const report = { translated: 0, cached: 0, failed: 0, provider: 'none', warnings: [] };
+    const map = new Map();
 
-    if (!language || language === 'en') return report;
+    const giveUp = () => {
+      texts.forEach((text) => { if (!map.get(text)) map.set(text, text); });
+      return { map, report };
+    };
+
+    if (!language || language === 'en' || !texts.length) return giveUp();
 
     const provider = AFR.providers.resolveTranslate();
     report.provider = provider.id;
     if (provider.id === 'none') {
-      report.warnings.push('No translation provider is configured, so this recipe is in English.');
-      return report;
+      report.warnings.push('No translation provider is configured, so this text is in English.');
+      return giveUp();
     }
-
-    const jobs = collect(recipe);
-    if (!jobs.length) return report;
 
     const cache = loadCache();
 
-    /* Deduplicate: one network slot per distinct string, applied to every
-       field that used it. A typical recipe drops from ~210 strings to ~150. */
-    const pending = new Map();
-    jobs.forEach((job) => {
-      const hit = cache[cacheKey(language, job.text)];
+    /* Batches are newline-separated, so a string containing a newline would
+       silently become two segments and throw the whole batch out of alignment.
+       Markup wraps prose across lines constantly, so collapse whitespace
+       before sending. The DOM collapses it for display anyway, which is why
+       writing back the collapsed form is visually identical. */
+    const normalise = (text) => String(text).trim().replace(/\s+/g, ' ');
+
+    /* Deduplicate: one network slot per distinct string, however many places
+       used it. A typical recipe drops from ~210 strings to ~150, and an
+       interface full of repeated labels compresses far harder than that.
+       Two spellings that differ only in whitespace collapse to one here. */
+    const unique = [];
+    const wanted = new Map();       // normalised -> the inputs waiting on it
+
+    texts.forEach((text) => {
+      if (map.has(text)) return;
+      const key = normalise(text);
+      if (!key) { map.set(text, text); return; }
+
+      if (!wanted.has(key)) wanted.set(key, []);
+      wanted.get(key).push(text);
+      map.set(text, '');            // reserved: needed, not yet resolved
+
+      /* Only queue each distinct normalised string once. */
+      if (wanted.get(key).length > 1) return;
+
+      const hit = cache[cacheKey(language, key)];
       if (hit) {
-        job.set(hit);
         report.cached += 1;
+        wanted.get(key).forEach((original) => map.set(original, hit));
+        wanted.set(key, []);        // satisfied; nothing left waiting
         return;
       }
-      if (!pending.has(job.text)) pending.set(job.text, []);
-      pending.get(job.text).push(job);
+      unique.push(key);
     });
 
-    const unique = Array.from(pending.keys());
+    /* Cached entries resolved above may have arrived before their duplicates
+       were seen, so give any straggler the same answer. */
+    texts.forEach((text) => {
+      if (map.get(text)) return;
+      const hit = cache[cacheKey(language, normalise(text))];
+      if (hit) map.set(text, hit);
+    });
+
     if (!unique.length) {
       onProgress(1);
-      return report;
+      return giveUp();
     }
 
     const batches = AFR.providers.translateBatchHelper.batch(unique);
@@ -306,7 +342,7 @@
           report.failed += texts.length;
           if (consecutiveNetworkFailures >= BREAKER_TRIP) {
             broken = true;
-            report.warnings.push('The translator could not be reached, so the rest of this recipe is in English.');
+            report.warnings.push('The translator could not be reached, so the rest of this text is in English.');
           }
           return;
         }
@@ -315,14 +351,15 @@
         results = await translateOneByOne(provider, texts, language, report, () => broken || Date.now() > deadline);
       }
 
-      texts.forEach((text, index) => {
+      texts.forEach((key, index) => {
         const value = results[index];
-        if (!value || value === text) {
+        if (!value || value === key) {
           if (!value) report.failed += 1;
           return;
         }
-        cache[cacheKey(language, text)] = value;
-        (pending.get(text) || []).forEach((job) => job.set(value));
+        cache[cacheKey(language, key)] = value;
+        /* Apply to every original spelling that normalised to this key. */
+        (wanted.get(key) || []).forEach((original) => map.set(original, value));
         report.translated += 1;
       });
 
@@ -333,11 +370,44 @@
     await pool(batches, MAX_PARALLEL, runBatch, (err) => {
       report.failed += 1;
       if (report.warnings.length < 2) {
-        report.warnings.push(`Part of this recipe stayed in English: ${err.message}`);
+        report.warnings.push(`Some text stayed in English: ${err.message}`);
       }
     });
 
     saveCache();
+    return giveUp();          // fills any un-fetched entry with its original
+  }
+
+  /**
+   * Translate a finished recipe in place.
+   *
+   * @param {object} recipe   a normalised recipe (mutated)
+   * @param {string} language target language code
+   * @param {object} hooks    { onProgress(fraction) }
+   * @returns {Promise<object>} the translation report
+   */
+  async function translateRecipe(recipe, language, hooks = {}) {
+    if (!language || language === 'en') {
+      return { translated: 0, cached: 0, failed: 0, provider: 'none', warnings: [] };
+    }
+
+    const jobs = collect(recipe);
+    if (!jobs.length) {
+      return { translated: 0, cached: 0, failed: 0, provider: 'none', warnings: [] };
+    }
+
+    const { map, report } = await translateStrings(jobs.map((j) => j.text), language, hooks);
+    jobs.forEach((job) => {
+      const value = map.get(job.text);
+      if (value && value !== job.text) job.set(value);
+    });
+
+    /* The recipe-specific phrasing of a failure, now that the shared helper
+       speaks in generalities. */
+    report.warnings = report.warnings.map((w) =>
+      w.replace('this text is in English', 'this recipe is in English')
+        .replace('the rest of this text', 'the rest of this recipe'));
+
     return report;
   }
 
@@ -388,5 +458,7 @@
     try { global.localStorage.removeItem(CACHE_KEY); } catch (err) { /* ignore */ }
   }
 
-  AFR.translation = { translateRecipe, collect, translatable, clearCache, CACHE_KEY };
+  AFR.translation = {
+    translateRecipe, translateStrings, collect, translatable, clearCache, CACHE_KEY,
+  };
 })(window);
