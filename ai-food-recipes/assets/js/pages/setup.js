@@ -52,6 +52,33 @@
       },
     },
     {
+      id: 'openModel',
+      name: 'Open-source model (Llama via Groq) — free alternative to Gemini',
+      what: 'Same result as Gemini, using open weights instead. Groq serves Llama and '
+        + 'other open models free and very fast, and speaks the standard OpenAI protocol — '
+        + 'so OpenRouter, Together, DeepInfra, or your own Ollama server all work by '
+        + 'changing one line in config.js. Use this if you would rather not depend on Google.',
+      keyField: 'openModel',
+      keyLabel: 'API key',
+      where: 'console.groq.com/keys -> Create API Key (free, no card). '
+        + 'Or openrouter.ai/keys for a wider choice of open models.',
+      free: 'Groq\'s free tier is thousands of requests a day, and it is the fastest option here.',
+      enables: "providers.ai = 'openModel'",
+      async run() {
+        const recipe = await AFR.providers.aiOpenModel.generate({
+          dish: 'Puran Poli', servings: 4, experience: 'intermediate', time: '60',
+          cuisine: 'auto', diet: [], spice: 'medium', sweetness: 'medium', salt: 'normal',
+          oil: 'moderate', style: 'traditional', appliances: ['stovetop'],
+          available: [], avoid: [], allergies: [], notes: '', language: 'en',
+        });
+        if (!recipe || !recipe.ingredients.length) throw new Error('The call succeeded but returned no recipe.');
+        return [
+          `${recipe.name} — ${recipe.ingredients.length} ingredients, ${recipe.steps.length} steps`,
+          ...recipe.ingredients.slice(0, 6).map((i) => `    ${i.qty} ${i.unit} ${i.name}`),
+        ];
+      },
+    },
+    {
       id: 'youtube',
       name: 'YouTube Data API v3',
       what: 'Searches YouTube for the dish and returns real titles, channels, durations, view counts and thumbnails.',

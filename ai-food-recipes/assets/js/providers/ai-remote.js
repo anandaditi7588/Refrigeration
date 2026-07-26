@@ -193,6 +193,69 @@
     },
   };
 
+  /* --------------------------------------------- Open-source models -----
+   * Llama, Mixtral, Qwen, DeepSeek and the rest are served by a dozen hosts
+   * that all speak the OpenAI chat-completions protocol. That makes them the
+   * same adapter with a different base URL, so "use an open model instead"
+   * costs one config line rather than a new integration.
+   *
+   * Groq and OpenRouter both have genuinely free tiers and both run open
+   * models. Anything else OpenAI-compatible — Together, DeepInfra, Cerebras,
+   * or your own Ollama/vLLM server on the network — works by setting
+   * `endpoints.openaiCompatible`.
+   */
+  const OPEN_HOSTS = {
+    groq: { url: 'https://api.groq.com/openai/v1/chat/completions', label: 'Groq' },
+    openrouter: { url: 'https://openrouter.ai/api/v1/chat/completions', label: 'OpenRouter' },
+    together: { url: 'https://api.together.xyz/v1/chat/completions', label: 'Together AI' },
+    deepinfra: { url: 'https://api.deepinfra.com/v1/openai/chat/completions', label: 'DeepInfra' },
+  };
+
+  const openModel = {
+    id: 'openModel', capability: 'ai', label: 'Open-source model',
+    async generate(answers, hooks = {}) {
+      const hostId = AFR.config.openModel.host;
+      const custom = AFR.config.endpoints.openaiCompatible;
+      const host = OPEN_HOSTS[hostId];
+      const url = custom || (host && host.url);
+      const label = custom ? 'Your endpoint' : (host ? host.label : 'Open model');
+      if (!url) throw new Error(`Unknown open-model host "${hostId}". Set providers.openModel.host or endpoints.openaiCompatible.`);
+
+      const key = AFR.config.keys.openModel;
+      /* A self-hosted Ollama or vLLM needs no key; a hosted service does. */
+      if (!key && !custom) throw new Error(`No API key configured for ${label} (AFR.config.keys.openModel)`);
+
+      (hooks.onProgress || (() => {}))(`Asking ${label} for a structured recipe…`, 0.4);
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (key) headers.Authorization = `Bearer ${key}`;
+      /* OpenRouter asks callers to identify themselves. */
+      if (hostId === 'openrouter' && !custom) headers['X-Title'] = 'AI Food Recipes';
+
+      const data = await post(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: AFR.config.openModel.model,
+          temperature: 0.7,
+          /* Not every open model honours json_object, so the prompt also
+             demands raw JSON and extractJSON() copes with fenced output. */
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: AFR.prompt.SYSTEM },
+            { role: 'user', content: AFR.prompt.build(answers) },
+          ],
+        }),
+      }, label);
+
+      const text = data.choices && data.choices[0] && data.choices[0].message.content;
+      const recipe = hydrate(extractJSON(text), answers);
+      recipe.meta.provider = `openModel:${AFR.config.openModel.model}`;
+      recipe.meta.mode = 'ai';
+      return recipe;
+    },
+  };
+
   /* ------------------------------------------------------------- Gemini */
   const gemini = {
     id: 'gemini', capability: 'ai', label: 'Google Gemini',
@@ -282,6 +345,9 @@
   };
 
   AFR.providers = AFR.providers || {};
-  Object.assign(AFR.providers, { aiOpenai: openai, aiGemini: gemini, aiClaude: claude, aiProxy: proxy });
+  Object.assign(AFR.providers, {
+    aiOpenai: openai, aiGemini: gemini, aiClaude: claude, aiProxy: proxy,
+    aiOpenModel: openModel,
+  });
   AFR.providers._aiHelpers = { extractJSON, hydrate };
 })(window);

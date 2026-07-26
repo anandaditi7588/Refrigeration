@@ -60,6 +60,7 @@
   if (P.aiLocal) register('ai', P.aiLocal);
   if (P.aiOpenai) register('ai', P.aiOpenai);
   if (P.aiGemini) register('ai', P.aiGemini);
+  if (P.aiOpenModel) register('ai', P.aiOpenModel);
   if (P.aiClaude) register('ai', P.aiClaude);
   if (P.aiProxy) register('ai', P.aiProxy);
 

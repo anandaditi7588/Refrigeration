@@ -45,6 +45,8 @@
         note('warn', 'fa-circle-info', w)).join('')}</div>`
       : '';
 
+    /* The prominent unknown-dish banner lives above the title, in the result
+       header (see pages/create.js) — repeating it here would just be noise. */
     return `
       <div class="afr-hero-recipe" style="padding:0">
         <div>

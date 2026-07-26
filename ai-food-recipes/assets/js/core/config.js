@@ -58,6 +58,10 @@
       video: '',     // e.g. 'https://api.example.com/youtube/search'
       recipe: '',    // e.g. 'https://api.example.com/recipes/search'
       translate: '', // e.g. 'https://api.example.com/translate'
+      /* Any OpenAI-compatible chat-completions URL: a hosted service not in the
+         list below, or your own Ollama / vLLM / LM Studio server. Set this and
+         `providers.ai = 'openModel'` to run a fully open-source model. */
+      openaiCompatible: '',   // e.g. 'http://localhost:11434/v1/chat/completions'
     },
 
     /* Direct-from-browser keys. Only for local development — anything here is
@@ -71,7 +75,21 @@
       unsplash: '',
       spoonacular: '',
       googleTranslate: '',   // only for providers.translate = 'googleCloud'
+      openModel: '',         // Groq / OpenRouter / Together / DeepInfra key
       edamam: { appId: '', appKey: '' },
+    },
+
+    /* Which open-source model to run, and where. Used when
+       `providers.ai = 'openModel'`. Everything here speaks the OpenAI
+       chat-completions protocol, which is why one adapter covers all of them.
+
+       Groq is the recommended starting point: genuinely free, very fast, and
+       it serves Llama and other open weights. OpenRouter has a free tier
+       across many open models. For a model running on your own machine, leave
+       `host` alone and set `endpoints.openaiCompatible` instead. */
+    openModel: {
+      host: 'groq',                                  // 'groq' | 'openrouter' | 'together' | 'deepinfra'
+      model: 'llama-3.3-70b-versatile',              // open weights, good at structured JSON
     },
 
     /* Model defaults per vendor, kept out of the adapter code so they can be
@@ -153,6 +171,7 @@
     gemini: { ai: 'gemini' },
     openai: { ai: 'openai' },
     claude: { ai: 'claude' },
+    openModel: { ai: 'openModel' },
     youtube: { video: 'youtube', photo: 'youtube' },
     pexels: { photo: 'pexels' },
     unsplash: { photo: 'unsplash' },

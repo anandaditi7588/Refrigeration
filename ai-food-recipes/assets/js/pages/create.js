@@ -140,7 +140,26 @@
 
     /* The full description lives in section 1 — the header just orients you. */
     const header = UI.qs('[data-result="header"]', views.result);
+
+    /* If the app does not actually know this dish, say so above the title.
+       Placed anywhere lower it reads as a footnote, and people quite
+       reasonably take a confident-looking recipe at face value. */
+    const unknown = recipe.meta.unknownDish;
+    const unknownBanner = unknown ? `
+      <div class="afr-banner afr-banner--strong" role="alert">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <span><strong>${unknown.speculative
+          ? `This is not a real recipe for ${U.esc(unknown.dish)}.`
+          : `This may not be the authentic ${U.esc(unknown.dish)}.`}</strong>
+          It is not in the offline collection, so the engine
+          ${unknown.speculative ? 'fell back to a generic' : 'composed one from a'}
+          ${U.esc(unknown.technique)} in the ${U.esc(unknown.cuisine)} style.
+          Connect a free AI model on the <a href="setup.html">Live Data</a> page to get the
+          real recipe for any dish.</span>
+      </div>` : '';
+
     header.innerHTML = `
+      ${unknownBanner}
       <p class="afr-eyebrow"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
         Your custom recipe · ${U.esc(recipe.meta.provider === 'local' ? 'built-in engine' : recipe.meta.provider)}</p>
       <h1>${U.esc(recipe.name)}</h1>

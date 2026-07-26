@@ -183,9 +183,27 @@
     /* Only invent a protein when the dish names no main ingredient at all.
        "Bhendi Masala" and "Aloo Gobi" are ABOUT their vegetable -- injecting a
        default paneer turned every vegetable curry into a paneer curry. */
+    /* When the dish is unknown AND its name names no ingredient, we genuinely
+       do not know what it is made of. The engine used to invent paneer here,
+       which is how "Borscht" and "Laal Maas" — a beetroot soup and a Rajasthani
+       mutton curry — both came back as paneer curries. Inventing a hero
+       ingredient is worse than admitting we have none, so take the cuisine's
+       own signature ingredient instead and mark the result speculative. */
+    let speculative = false;
     if (!known && !protein && !base && ['curry', 'riceDish', 'stirFry', 'grilled', 'assembly'].includes(technique.id)) {
-      const fallback = isVegan ? 'tofu' : isVeg ? 'paneer' : diet.includes('non-vegetarian') ? 'chicken' : 'paneer';
-      protein = AFR.data.ingredients.byId[fallback];
+      speculative = true;
+      /* A staple of the detected cuisine is a defensible neutral choice: it at
+         least belongs in that kitchen, and it makes no claim about a dish we
+         cannot identify. */
+      const staple = (cuisine.staples || []).concat(['potato'])
+        .map((id) => AFR.data.ingredients.byId[id])
+        .find((item) => {
+          if (!item) return false;
+          if (isVegan && ['meat', 'seafood', 'dairy'].includes(item.category)) return false;
+          if (isVeg && ['meat', 'seafood'].includes(item.category)) return false;
+          return true;
+        });
+      if (staple) base = staple;
     }
     if (protein && base && protein.id === base.id) base = null;
 
@@ -195,6 +213,7 @@
       cuisine, technique, servings,
       known: known ? known.dish : null,
       knownConfidence: known ? known.confidence : 0,
+      speculative,
       protein, base, proteinExplicit,
       diet, allergies, appliances, avoid, available,
       notes: U.clean(answers.notes),
@@ -983,13 +1002,23 @@
        compose — but coherent is not the same as correct, and presenting a
        guess as a recipe is the one failure worth warning about every time. */
     if (!c.known && !AFR.config.isLive('ai')) {
-      recipe.meta.warnings.push(
-        `"${c.dish}" is not in the built-in recipe collection, so this was composed from its `
-        + `${c.technique.name.toLowerCase()} technique and the ${c.cuisine.name} flavour profile. `
-        + 'It will cook, but it may not be the authentic version of this dish. '
-        + 'For any dish by name, add a Gemini key on the Live Data page — the model knows the '
-        + 'dish and writes it directly, in your chosen language.');
-      recipe.meta.confidence = 'composed';
+      recipe.meta.confidence = c.speculative ? 'unknown' : 'composed';
+      recipe.meta.unknownDish = {
+        dish: c.dish,
+        /* `speculative` means the name told us nothing either — not even which
+           vegetable or protein it centres on. That is a materially weaker
+           answer than a composed one and should not be presented the same way. */
+        speculative: c.speculative,
+        technique: c.technique.name.toLowerCase(),
+        cuisine: c.cuisine.name,
+      };
+      recipe.meta.warnings.push(c.speculative
+        ? `This is NOT a recipe for ${c.dish}. The app does not know this dish, and its name does `
+          + 'not identify a main ingredient either, so what follows is a generic '
+          + `${c.technique.name.toLowerCase()} in the ${c.cuisine.name} style. Treat it as a template, not an answer.`
+        : `"${c.dish}" is not in the built-in recipe collection, so this was composed from its `
+          + `${c.technique.name.toLowerCase()} technique and the ${c.cuisine.name} flavour profile. `
+          + 'It will cook, but it may not be the authentic version of this dish.');
     } else {
       recipe.meta.confidence = c.known ? 'known' : 'ai';
     }

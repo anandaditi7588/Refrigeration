@@ -785,6 +785,17 @@
 }
 .afr-banner i { color: var(--afr-info); margin-top: 3px; }
 
+/* Used when the app does not know the dish it was asked for. Deliberately
+   louder than an informational banner: the reader has to register this before
+   they read the recipe as an answer. */
+.afr-banner--strong {
+  background: rgba(217, 147, 33, 0.12);
+  border-color: rgba(217, 147, 33, 0.45);
+  border-left-width: 4px;
+  font-size: 0.95rem;
+}
+.afr-banner--strong i { color: var(--afr-warn, #d99321); }
+
 /* Toasts */
 .afr-toasts { position: fixed; right: 16px; bottom: 16px; z-index: 1200; display: flex; flex-direction: column; gap: 10px; max-width: min(360px, calc(100vw - 32px)); }
 .afr-toast {
