@@ -32,9 +32,14 @@
       video: 'local',        // 'youtube' for live video search
       recipe: 'local',
       image: 'local',        // drawn-plate fallback painter
-      /* Real photography. 'youtube' reuses the video thumbnails you already
-         fetched (no extra key); 'pexels' / 'unsplash' need their own free key. */
-      photo: 'local',        // 'youtube' | 'pexels' | 'unsplash' | 'wikimedia'
+      /* Real photography for the DISH itself. Wikimedia Commons is the default
+         because it is the only source that needs no key at all and answers a
+         browser directly (its API sends `origin=*`), so a plain static deploy
+         shows real photographs out of the box.
+         'pexels' and 'unsplash' are better-curated but each need a free key;
+         'youtube' reuses video thumbnails you already fetched; 'local' goes
+         back to the drawn plates and makes no network request whatsoever. */
+      photo: 'wikimedia',    // 'wikimedia' | 'youtube' | 'pexels' | 'unsplash' | 'local'
       /* Ingredient tiles use openly-licensed sources that need no key at all:
          TheMealDB's ingredient CDN first (fast, predictable URLs, studio shots)
          then Wikimedia Commons for anything it lacks -- which is most regional
