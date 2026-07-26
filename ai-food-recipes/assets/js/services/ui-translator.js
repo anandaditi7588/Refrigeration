@@ -339,7 +339,13 @@
     const brand = document.querySelector('.afr-brand__text');
     if (brand) brand.setAttribute('data-no-translate', '');
 
-    currentLanguage = (AFR.i18n && AFR.i18n.current) || 'en';
+    /* Read the saved choice directly rather than trusting AFR.i18n.current:
+       both modules initialise on DOMContentLoaded and this one is registered
+       first, so i18n has not necessarily picked up the stored language yet.
+       Relying on it meant a returning user's saved language applied only when
+       they re-opened the picker. */
+    currentLanguage = (AFR.store && AFR.store.get('language'))
+      || (AFR.i18n && AFR.i18n.current) || 'en';
     if (currentLanguage !== 'en') { observe(); schedule(60); }
 
     document.addEventListener('afr:languagechange', (event) => {

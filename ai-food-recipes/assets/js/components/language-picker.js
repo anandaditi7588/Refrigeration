@@ -19,6 +19,11 @@
     const groups = AFR.data.languages.byCountry();
     const currentCode = AFR.i18n.current;
 
+    /* Languages built into the page work with no connection at all. The rest
+       need the translator, which a published Artifact page cannot reach — so
+       say which is which rather than letting someone pick and see English. */
+    const offline = new Set(AFR.uiCatalogLanguages || []);
+
     const options = groups.map((group) => `
       <div class="afr-lang__group">
         <h4>${U.esc(group.country)}</h4>
@@ -27,9 +32,9 @@
                   aria-pressed="${lang.code === currentCode}">
             <span class="afr-lang__native" ${lang.rtl ? 'dir="rtl"' : ''}>${U.esc(lang.native)}</span>
             <span class="afr-lang__name">${U.esc(lang.name)}</span>
-            ${lang.uiReady
-              ? '<span class="afr-chip afr-chip--veg">Full</span>'
-              : '<span class="afr-chip">Recipe only</span>'}
+            ${lang.code === 'en' || offline.has(lang.code)
+              ? '<span class="afr-chip afr-chip--veg">Built in</span>'
+              : '<span class="afr-chip">Needs connection</span>'}
           </button>`).join('')}
       </div>`).join('');
 
