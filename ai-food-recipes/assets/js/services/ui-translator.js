@@ -34,10 +34,97 @@
   const originalText = new WeakMap();
   const originalAttr = new WeakMap();
 
+  /* ---------------------------------------------------------------------- */
+  /* Embedded catalogue                                                      */
+  /* ---------------------------------------------------------------------- */
+  /* A published Artifact page cannot make ANY external request, so the live
+     translator is unavailable there. The build step pre-translates the whole
+     interface and embeds it as gzipped base64 (AFR.uiCatalogPacked), which
+     this decodes once on demand. That is what makes language switching work
+     offline and instantly.
+
+     It is also a straight upgrade when online: an embedded hit costs nothing
+     and never waits on the network. */
+  const decoded = {};
+  let decoding = null;
+
+  function b64ToBytes(b64) {
+    const binary = global.atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
+  /** Unpack the embedded catalogue. Cached, and only ever attempted once. */
+  async function loadCatalog() {
+    if (decoding) return decoding;
+
+    decoding = (async () => {
+      const packed = AFR.uiCatalogPacked;
+      if (!packed) return {};
+      try {
+        const bytes = b64ToBytes(packed);
+        /* DecompressionStream is native in current browsers. Where it is
+           missing the page simply falls back to the live translator, so an
+           older browser loses speed rather than the feature. */
+        if (typeof DecompressionStream !== 'function') return {};
+        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+        const json = await new Response(stream).text();
+        Object.assign(decoded, JSON.parse(json));
+        return decoded;
+      } catch (err) {
+        return {};
+      }
+    })();
+
+    return decoding;
+  }
+
+  /** Translations for one language from the embedded catalogue. */
+  async function embedded(language) {
+    const all = await loadCatalog();
+    return all[language] || null;
+  }
+
+  /* Numbers change at runtime — "11/16 answered" is never the same twice — so
+     the catalogue is keyed on the shape with every digit run flattened to 0.
+     One entry then serves the whole family of counters. */
+  const canonical = (s) => String(s).replace(/\d+/g, '0');
+
+  /**
+   * Look a string up in the embedded catalogue, restoring its real numbers.
+   * Returns null when there is no usable entry, so the caller can fall through
+   * to the live translator.
+   */
+  function lookup(book, text) {
+    if (!book) return null;
+
+    const exact = book[text];
+    if (exact) return exact;
+
+    const digits = text.match(/\d+/g);
+    if (!digits) return null;
+
+    const translated = book[canonical(text)];
+    if (!translated) return null;
+
+    /* Only substitute when the translation kept the same number of slots —
+       otherwise we would be guessing which number goes where, and a wrong
+       quantity in a recipe is worse than an untranslated label. */
+    const slots = translated.match(/\d+/g);
+    if (!slots || slots.length !== digits.length) return null;
+
+    let i = 0;
+    return translated.replace(/\d+/g, () => digits[i++]);
+  }
+
   let observer = null;
   let scheduled = null;
   let running = false;
   let currentLanguage = 'en';
+  /* Latched once the live translator is shown to be unreachable, so a page
+     with no network (a published Artifact) stops paying for the discovery. */
+  let liveDead = false;
 
   /** Marks a subtree as off-limits: brand names, user input, dish names. */
   function isProtected(node) {
@@ -149,15 +236,46 @@
       const sources = texts.map(rememberText)
         .concat(attrs.map(({ el, name }) => rememberAttr(el, name)));
 
-      /* Trim before sending: whitespace in markup is layout, not content, and
-         sending it wastes budget and confuses segment alignment. */
-      const trimmed = sources.map((s) => String(s).trim()).filter(Boolean);
-      const { map, report } = await AFR.translation.translateStrings(trimmed, currentLanguage);
+      /* Normalise before looking anything up: whitespace in markup is layout,
+         not content, and the embedded catalogue is keyed on the collapsed
+         form. */
+      const key = (s) => String(s).trim().replace(/\s+/g, ' ');
+      const trimmed = sources.map(key).filter(Boolean);
+
+      /* Embedded catalogue first — free, instant, and the only source that
+         works on a published page. Anything it lacks goes to the network,
+         which is a no-op when there isn't one. */
+      const book = await embedded(currentLanguage);
+      const map = new Map();
+      const missing = [];
+
+      trimmed.forEach((text) => {
+        if (map.has(text)) return;
+        const hit = lookup(book, text);
+        if (hit) map.set(text, hit); else missing.push(text);
+      });
+
+      const report = { embedded: map.size, live: 0, missing: missing.length, warnings: [] };
+
+      /* Only reach for the network when the catalogue came up short AND the
+         network has not already proved itself absent. On a published Artifact
+         every request is blocked, and the wizard re-renders on every step —
+         without this latch each step would stall on a doomed round trip. */
+      if (missing.length && !liveDead) {
+        const live = await AFR.translation.translateStrings(missing, currentLanguage);
+        live.map.forEach((value, text) => map.set(text, value));
+        report.live = live.report.translated + live.report.cached;
+        report.warnings = live.report.warnings;
+
+        if (!live.report.translated && !live.report.cached && live.report.failed) {
+          liveDead = true;
+        }
+      }
 
       texts.forEach((node) => {
         const original = originalText.get(node);
-        const value = map.get(String(original).trim());
-        if (!value || value === String(original).trim()) return;
+        const value = map.get(key(original));
+        if (!value || value === key(original)) return;
         /* Preserve the original leading/trailing whitespace so inline layout
            ("Step 1 of 16") does not lose its spaces. */
         const lead = (original.match(/^\s*/) || [''])[0];
@@ -167,7 +285,7 @@
 
       attrs.forEach(({ el, name }) => {
         const store = originalAttr.get(el) || {};
-        const value = map.get(String(store[name] || '').trim());
+        const value = map.get(key(store[name] || ''));
         if (value) el.setAttribute(name, value);
       });
 
