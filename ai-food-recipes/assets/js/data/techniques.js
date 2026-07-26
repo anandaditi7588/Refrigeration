@@ -83,7 +83,11 @@
       ingredients: (c) => [
         byWeight(c.protein, c.protein && (c.protein.category === 'meat' || c.protein.category === 'seafood') ? 150 : 80,
           'The protein centrepiece — cooked through in the gravy so it takes on the masala'),
-        !c.protein && byWeight(c.base, 130, 'The vegetable heart of the curry'),
+        /* The named vegetable belongs in the pot whether or not there is also
+           a protein -- dropping it is what made "Palak Paneer" arrive without
+           any spinach. */
+        byWeight(c.base, c.protein ? 90 : 170,
+          c.protein ? 'Vegetable cooked alongside the protein' : 'The vegetable heart of the dish'),
         ing(fatOf(c), 0.6, 'tbsp', 'Carries the fat-soluble spice flavour into everything else'),
         ing('onion', 0.7, 'pieces', 'Cooked down to a sweet, jammy base'),
         ing('garlic', 1.6, 'cloves', 'Pungent depth in the base'),
@@ -189,6 +193,7 @@
         ing('rice', 0.4, 'cups', 'The staple — soaked and part-cooked so every grain stays separate'),
         byWeight(c.protein, c.protein && c.protein.category === 'meat' ? 130 : 70,
           'Marinated and layered through the rice'),
+        byWeight(c.base, 110, 'The named vegetable, layered through the rice'),
         ing(fatOf(c), 0.75, 'tbsp', 'Coats the grains and stops them clumping'),
         ing('onion', 0.8, 'pieces', 'Half for the base, half fried crisp for layering'),
         ing('garlic', 1.5, 'cloves', 'Aromatic base'),
@@ -320,6 +325,7 @@
         ing(c.base && c.base.category === 'grains' ? c.base.id : 'all-purpose-flour', 0.5, 'cups',
           'The structural base — dough, pasta or starch layer'),
         byWeight(c.protein, c.protein && c.protein.category === 'meat' ? 110 : 60, 'The filling'),
+        c.base && c.base.category === 'vegetables' && byWeight(c.base, 90, 'Vegetable through the filling'),
         ing('tomato', 1.2, 'pieces', 'The sauce layer'),
         ing('onion', 0.5, 'pieces', 'Sweet base for the sauce'),
         ing('garlic', 1.5, 'cloves', 'Aromatic depth'),
@@ -375,7 +381,7 @@
 
       ingredients: (c) => [
         byWeight(c.protein, c.protein && c.protein.category === 'meat' ? 160 : 90, 'The star — marinated, then cooked hard and fast'),
-        !c.protein && byWeight(c.base, 150, 'The vegetable centrepiece'),
+        byWeight(c.base, c.protein ? 100 : 170, c.protein ? 'Charred alongside' : 'The vegetable centrepiece'),
         ing('yogurt', 0.18, 'cups', 'Marinade base — its acid tenderises and its protein helps the char'),
         ing('garlic', 2, 'cloves', 'Marinade depth'),
         ing('ginger', 0.25, 'inch', 'Marinade depth'),
@@ -767,9 +773,11 @@
       times: () => ({ prep: 12, cook: 15 }),
 
       ingredients: (c) => [
-        ing(c.base && ['grains', 'legumes'].includes(c.base.category) ? c.base.id : 'egg',
-          c.base && ['grains', 'legumes'].includes(c.base.category) ? 0.4 : 2,
-          c.base && ['grains', 'legumes'].includes(c.base.category) ? 'cups' : 'pieces', 'The base of the dish'),
+        /* Only fall back to eggs when the dish names no base of its own --
+           "Poha" is flattened rice, not an omelette. */
+        c.base ? byWeight(c.base, c.base.category === 'grains' ? 70 : 130, 'The base of the dish')
+          : ing(c.isVeg ? 'semolina' : 'egg', c.isVeg ? 0.35 : 2,
+            c.isVeg ? 'cups' : 'pieces', 'The base of the dish'),
         ing('onion', 0.4, 'pieces', 'Aromatic base'),
         c.heat.level > 0 && ing('green-chilli', 0.4, 'pieces', 'Morning heat'),
         ing(fatOf(c), 0.5, 'tbsp', 'Cooking fat'),

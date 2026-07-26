@@ -50,6 +50,20 @@
     ['pumpkin', 'pumpkin'], ['carrot', 'carrot'], ['peas', 'peas'], ['matar', 'peas'],
     ['corn', 'corn'], ['cabbage', 'cabbage'], ['zucchini', 'zucchini'], ['beetroot', 'beetroot'],
     ['sweet potato', 'sweet-potato'], ['pepper', 'bell-pepper'], ['capsicum', 'bell-pepper'],
+    /* South Asian vegetable names, so "Bhendi Masala" is about the bhendi. */
+    ['okra', 'okra'], ['bhindi', 'okra'], ['bhendi', 'okra'], ['ladyfinger', 'okra'],
+    ['lauki', 'bottle-gourd'], ['dudhi', 'bottle-gourd'], ['ghiya', 'bottle-gourd'],
+    ['karela', 'bitter-gourd'], ['bitter gourd', 'bitter-gourd'], ['bitter melon', 'bitter-gourd'],
+    ['turai', 'ridge-gourd'], ['tori', 'ridge-gourd'], ['ridge gourd', 'ridge-gourd'],
+    ['tinda', 'tinda'], ['methi', 'fenugreek-leaves'], ['sarson', 'mustard-greens'],
+    ['saag', 'mustard-greens'], ['drumstick', 'drumstick'], ['moringa', 'drumstick'],
+    ['arbi', 'colocasia'], ['taro', 'colocasia'], ['suran', 'yam'], ['yam', 'yam'],
+    ['guar', 'cluster-beans'], ['gawar', 'cluster-beans'], ['petha', 'ash-gourd'],
+    ['mooli', 'radish'], ['radish', 'radish'], ['chaulai', 'amaranth-leaves'],
+    ['green beans', 'green-beans'], ['french beans', 'green-beans'],
+    ['plantain', 'raw-banana'], ['kela', 'raw-banana'],
+    ['poha', 'poha'], ['sabudana', 'sabudana'], ['sago', 'sabudana'],
+    ['besan', 'besan'], ['gram flour', 'besan'], ['upma', 'semolina'], ['rava', 'semolina'],
     ['tomato', 'tomato'], ['onion', 'onion'], ['cucumber', 'cucumber'], ['avocado', 'avocado'],
     ['rice', 'rice'], ['pasta', 'pasta'], ['noodle', 'noodles'], ['bread', 'bread'],
     ['oat', 'oats'], ['quinoa', 'quinoa'], ['flour', 'all-purpose-flour'], ['chocolate', 'chocolate'],
@@ -153,8 +167,13 @@
     if (protein && isVegan && VEGAN_SWAP[protein.id]) protein = AFR.data.ingredients.byId[VEGAN_SWAP[protein.id]];
     else if (protein && isVeg && VEG_SWAP[protein.id]) protein = AFR.data.ingredients.byId[VEG_SWAP[protein.id]];
 
-    /* No protein named, but the technique wants one — pick a sensible default. */
-    if (!protein && ['curry', 'riceDish', 'stirFry', 'grilled', 'assembly'].includes(technique.id)) {
+    /* Did the dish name actually mention a protein, or are we guessing? */
+    const proteinExplicit = Boolean(protein);
+
+    /* Only invent a protein when the dish names no main ingredient at all.
+       "Bhendi Masala" and "Aloo Gobi" are ABOUT their vegetable -- injecting a
+       default paneer turned every vegetable curry into a paneer curry. */
+    if (!protein && !base && ['curry', 'riceDish', 'stirFry', 'grilled', 'assembly'].includes(technique.id)) {
       const fallback = isVegan ? 'tofu' : isVeg ? 'paneer' : diet.includes('non-vegetarian') ? 'chicken' : 'paneer';
       protein = AFR.data.ingredients.byId[fallback];
     }
@@ -164,7 +183,7 @@
       answers,
       dish, dishRaw,
       cuisine, technique, servings,
-      protein, base,
+      protein, base, proteinExplicit,
       diet, allergies, appliances, avoid, available,
       notes: U.clean(answers.notes),
       experience: answers.experience || 'intermediate',
@@ -380,9 +399,16 @@
       });
     });
 
-    /* Sort so the main components lead and seasoning trails. */
+    /* Sort so the main components lead and seasoning trails. The dish's own
+       star ingredient always comes first: "Bhendi Masala" should not open its
+       ingredient table with cream and ghee. */
+    const starIds = new Set([c.protein && c.protein.id, c.base && c.base.id].filter(Boolean));
     const rank = { meat: 0, seafood: 0, legumes: 1, dairy: 2, vegetables: 3, grains: 4, fruits: 5, nuts: 6, herbs: 7, oils: 8, condiments: 9, sweeteners: 10, spices: 11, others: 12 };
-    lines.sort((a, b) => (rank[a.item.category] ?? 99) - (rank[b.item.category] ?? 99) || b.grams - a.grams);
+    lines.forEach((line) => { line.star = starIds.has(line.item.id); });
+    lines.sort((a, b) =>
+      (b.star ? 1 : 0) - (a.star ? 1 : 0)
+      || (rank[a.item.category] ?? 99) - (rank[b.item.category] ?? 99)
+      || b.grams - a.grams);
     return lines;
   }
 

@@ -292,7 +292,11 @@
     indian: ['biryani', 'masala', 'paneer', 'tikka', 'curry', 'dal', 'daal', 'tandoori', 'samosa', 'dosa',
       'idli', 'chaat', 'korma', 'vindaloo', 'butter chicken', 'rogan josh', 'chole', 'rajma', 'palak',
       'pulao', 'raita', 'naan', 'roti', 'paratha', 'halwa', 'kheer', 'lassi', 'pakora', 'bhaji', 'sambar',
-      'rasam', 'upma', 'poha', 'kadai', 'malai', 'jalebi', 'gulab jamun', 'vada', 'uttapam', 'thali'],
+      'rasam', 'upma', 'poha', 'kadai', 'malai', 'jalebi', 'gulab jamun', 'vada', 'uttapam', 'thali',
+      /* Vegetable and preparation names that identify an Indian dish on their own. */
+      'sabzi', 'sabji', 'bhaji', 'bharta', 'thepla', 'saag', 'bhindi', 'bhendi', 'karela',
+      'lauki', 'tinda', 'arbi', 'turai', 'methi', 'sarson', 'aloo', 'gobi', 'baingan',
+      'matar', 'mooli', 'suran', 'guar', 'sabudana', 'besan', 'khichdi', 'poori', 'puri'],
     italian: ['pasta', 'pizza', 'risotto', 'lasagna', 'lasagne', 'carbonara', 'bolognese', 'gnocchi',
       'bruschetta', 'tiramisu', 'focaccia', 'pesto', 'ravioli', 'penne', 'spaghetti', 'alfredo',
       'minestrone', 'caprese', 'panna cotta', 'arancini', 'calzone'],
