@@ -38,6 +38,24 @@
   "safety": { "temps": string[], "storage": string[], "crossContamination": string[], "expiry": string[] }
 }`;
 
+  /** The instruction that makes a hosted model write the whole recipe in the
+   *  chosen language. Deliberately explicit about what must NOT be translated:
+   *  numbers and units have to stay machine-readable for the nutrition maths. */
+  function languageInstruction(code) {
+    const lang = AFR.data.languages.get(code || (AFR.i18n && AFR.i18n.current) || 'en');
+    if (lang.code === 'en') return '';
+    return [
+      '',
+      `LANGUAGE: Write EVERY human-readable string in ${lang.name} (${lang.native}).`,
+      'That includes the recipe name, description, ingredient names, purposes,',
+      'substitutes, equipment, every preparation and cooking step, tips, mistakes,',
+      'serving suggestions, health notes, storage, meal planning and food safety.',
+      'Keep the JSON KEYS in English exactly as given in the schema.',
+      'Keep numeric values as numbers, and keep units in a form a cook there would',
+      'recognise. Do not add a translation in brackets -- write it natively.',
+    ].join('\n');
+  }
+
   const SYSTEM = [
     'You are a professional recipe developer who has cooked across many cuisines.',
     'You write precise, testable recipes: real quantities, real temperatures, real timings.',
@@ -97,8 +115,9 @@
       '',
       'Return JSON only, matching this schema exactly:',
       SCHEMA_HINT,
+      languageInstruction(answers.language),
     ].join('\n');
   }
 
-  AFR.prompt = { SYSTEM, SCHEMA_HINT, brief, build };
+  AFR.prompt = { SYSTEM, SCHEMA_HINT, brief, build, languageInstruction };
 })(window);

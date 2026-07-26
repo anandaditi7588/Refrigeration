@@ -824,3 +824,55 @@
 
 /* Lazy image placeholder */
 img[loading="lazy"] { background: var(--afr-bg-alt); }
+
+
+/* --------------------------------------------------------------------------
+   Language picker
+   -------------------------------------------------------------------------- */
+.afr-lang { position: relative; }
+.afr-lang__current { max-width: 9ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 640px) { .afr-lang__current { display: none; } }
+
+.afr-lang__panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  inset-inline-end: 0;
+  z-index: 950;
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  padding: var(--afr-space-4);
+}
+.afr-lang__panel[hidden] { display: none; }
+.afr-lang__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.afr-lang__list { display: grid; gap: var(--afr-space-4); }
+.afr-lang__group h4 {
+  font-family: var(--afr-font-body);
+  font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--afr-text-muted); margin: 0 0 6px;
+}
+.afr-lang__option {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 9px 12px; margin-bottom: 4px;
+  border: 1px solid var(--afr-border); border-radius: var(--afr-radius-sm);
+  background: var(--afr-surface); color: var(--afr-text);
+  font: inherit; text-align: start; cursor: pointer;
+}
+.afr-lang__option:hover { border-color: var(--afr-brand-500); background: var(--afr-bg-alt); }
+.afr-lang__option[aria-pressed="true"] {
+  border-color: var(--afr-brand-500); background: var(--afr-brand-50);
+}
+[data-theme="dark"] .afr-lang__option[aria-pressed="true"] { background: rgba(247, 134, 43, 0.14); }
+.afr-lang__native { font-weight: 700; }
+.afr-lang__name { color: var(--afr-text-muted); font-size: 0.84rem; }
+.afr-lang__option .afr-chip { margin-inline-start: auto; }
+
+/* Right-to-left languages flip the whole document, so mirror the pieces that
+   were positioned with physical properties. */
+[dir="rtl"] .afr-nav__actions { margin-left: 0; margin-right: auto; }
+[dir="rtl"] .afr-step { padding-left: 0; padding-right: 62px; }
+[dir="rtl"] .afr-step__num { left: auto; right: 0; }
+[dir="rtl"] .afr-timeline::before { left: auto; right: 21px; }
+[dir="rtl"] .afr-toasts { right: auto; left: 16px; }
+[dir="rtl"] .afr-note { border-left: 0; border-right: 3px solid currentColor; }
+@media (max-width: 560px) { [dir="rtl"] .afr-step { padding-right: 0; } }

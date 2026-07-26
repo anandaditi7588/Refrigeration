@@ -90,9 +90,11 @@ ai-food-recipes/
         │   ├── config.js      ← the only file you edit to go live
         │   ├── utils.js       pure helpers (formatting, seeded RNG, keyword matching)
         │   ├── store.js       namespaced localStorage with an in-memory fallback
+        │   ├── i18n.js        interface translation, text direction
         │   └── ui.js          DOM kit: theming, toasts, accordions, tabs, reveal, print
         ├── data/
-        │   ├── ingredients.js ~120-item pantry: units, nutrition, cost, substitutes
+        │   ├── ingredients.js ~145-item pantry: units, nutrition, cost, substitutes
+        │   ├── languages.js   35 languages grouped by country, RTL flags
         │   ├── cuisines.js    16 regional flavour profiles + cuisine detection
         │   ├── techniques.js  13 cooking techniques: components + prep/cook steps
         │   ├── wizard-steps.js the 16-step questionnaire, declaratively
@@ -110,7 +112,7 @@ ai-food-recipes/
         │   ├── photo-providers.js       Pexels · Unsplash · Wikimedia · YouTube thumbs
         │   ├── recipe-api-providers.js  Spoonacular · Edamam · your aggregator
         │   └── registry.js              capability → provider lookup
-        ├── components/  recipe-card · wizard · recipe-view
+        ├── components/  recipe-card · wizard · recipe-view · language-picker
         └── pages/       home · create · saved · setup
 ```
 
@@ -147,9 +149,11 @@ oil absorbed during frying.
 
 ## Live data: real YouTube results and real photographs
 
-**Ingredient photographs work out of the box, with no key and no setup.** They come from
-Wikimedia Commons, which needs no credentials, so the ingredient table shows real vegetables
-the first time you run the app online. Everything else — the hero shot, step photos and
+**Ingredient photographs work out of the box, with no key and no setup.** Two openly-licensed
+sources are chained: TheMealDB's ingredient CDN first (predictable URLs, so there is no API
+call at all — just a probe to check the image exists), then Wikimedia Commons for anything it
+lacks, which is most regional produce. So the ingredient table shows real vegetables the first
+time you run the app online. Everything else — the hero shot, step photos and
 YouTube results — needs a free key.
 
 To go completely network-free, set `images.ingredientPhotos: false` in `config.js`; the app
@@ -169,7 +173,8 @@ actual response or the actual error. Start there rather than editing files blind
 | **YouTube Data API v3** | required | 10,000 units/day ≈ 90 searches | Real videos: titles, channels, durations, view counts, publish dates, thumbnails |
 | **Pexels** | required | 200/hour | Real food photography for the hero, gallery and every cooking step |
 | **Unsplash** | required | 50/hour (demo) | Same, alternative source. Credits the photographer automatically |
-| **Wikimedia Commons** | **none** | unlimited | Ingredient photographs. **On by default — no setup** |
+| **TheMealDB** | **none** | unlimited | Ingredient photographs, first choice. **On by default** |
+| **Wikimedia Commons** | **none** | unlimited | Ingredient fallback for regional produce |
 | **Spoonacular / Edamam** | required | 150 points/day | Recipe references and cooking-time cross-checks |
 
 ### Getting a YouTube key
@@ -205,7 +210,7 @@ because it comes from a video about it.
 
 | Image | Source | Needs a key? |
 |---|---|---|
-| Ingredient table tiles | `providers.ingredientPhoto` (Wikimedia) | **No** — works immediately |
+| Ingredient table tiles | `providers.ingredientPhoto` (TheMealDB → Wikimedia) | **No** — works immediately |
 | Hero, gallery, prep and cooking steps | `providers.photo` | Yes, unless you use `youtube` |
 | Video thumbnails | `providers.video` | Yes (YouTube) |
 
@@ -255,6 +260,41 @@ Anything in `config.js` ships to every visitor. That is fine for a YouTube key r
 your own domain, and fine for a personal or local project. For anything public and billable,
 point `endpoints.ai` / `endpoints.video` at a small server of your own that holds the secrets
 and set the matching provider to `proxy`.
+
+---
+
+## Language
+
+A country-wise language picker sits in the navigation. Languages are grouped by country,
+because that is how people look for them — someone in India sees Hindi, Bengali, Tamil,
+Marathi, Gujarati, Kannada, Malayalam, Punjabi and Urdu together rather than scattered
+through an alphabetical list of thirty-five.
+
+**Two different things get translated, and it is worth being precise about which:**
+
+| What | How | Works offline? |
+|---|---|---|
+| The interface — nav, wizard, buttons, headings | `core/i18n.js` string catalogue | Yes |
+| **The recipe itself** — all 20 sections | An instruction in the prompt sent to the AI provider | **No** |
+
+The recipe is the part that matters, and it is translated by whichever model writes it.
+`prompt-builder.js` appends an explicit instruction to write every human-readable string in
+the chosen language while keeping the JSON keys and numeric values intact. Set
+`providers.ai` to `openai`, `gemini` or `claude` and the whole recipe arrives in that language.
+
+**The built-in offline engine cannot translate itself** — it composes English prose from
+templates. When a non-English language is selected and the local engine is active, the app
+says so in the language panel and adds a warning to the recipe, rather than silently
+returning English.
+
+Interface strings are currently translated for English, Hindi, Spanish, French, German and
+Arabic. Every other language still drives the recipe output; the picker labels these
+"Recipe only" so the distinction is visible before you choose. Right-to-left languages
+(Arabic, Urdu, Persian, Hebrew) flip the document direction and mirror the layout.
+
+Adding a language is two steps: an entry in `data/languages.js`, and a catalogue block in
+`core/i18n.js`. Missing keys fall back to English one at a time, so a partial translation is
+always safe to ship.
 
 ---
 

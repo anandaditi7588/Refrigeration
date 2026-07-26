@@ -54,6 +54,9 @@
     const warnings = [];
     const sourcesUsed = [];
 
+    /* The picker is global rather than a wizard step, so fold it in here. */
+    if (!answers.language && AFR.i18n) answers.language = AFR.i18n.current;
+
     let completed = 0;
     const advance = (stageIndex, within, label) => {
       const before = STAGES.slice(0, stageIndex).reduce((s, x) => s + x.weight, 0);
@@ -221,6 +224,14 @@
       recipe: AFR.config.isLive('recipe'),
     };
     recipe.meta.generatedAt = new Date().toISOString();
+    recipe.meta.language = answers.language || 'en';
+
+    /* Say it plainly rather than silently returning English. */
+    if (recipe.meta.language !== 'en' && recipe.meta.provider === 'local') {
+      recipe.meta.warnings.push(
+        `This recipe is in English: the built-in offline engine cannot write ${AFR.data.languages.get(recipe.meta.language).name}. `
+        + 'Configure an AI provider in config.js and it will be written in your chosen language.');
+    }
 
     advance(4, 1);
     return recipe;

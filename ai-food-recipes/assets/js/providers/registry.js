@@ -71,6 +71,8 @@
   if (P.photoUnsplash) register('photo', P.photoUnsplash);
   if (P.photoWikimedia) register('photo', P.photoWikimedia);
   if (P.photoYoutube) register('photo', P.photoYoutube);
+  if (P.photoThemealdb) register('photo', P.photoThemealdb);
+  if (P.photoOpenChain) register('photo', P.photoOpenChain);
 
   if (P.recipeLocal) register('recipe', P.recipeLocal);
   if (P.recipeSpoonacular) register('recipe', P.recipeSpoonacular);

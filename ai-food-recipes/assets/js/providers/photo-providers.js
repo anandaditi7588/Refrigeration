@@ -148,6 +148,78 @@
     },
   };
 
+  /* ------------------------------------------------------------ themealdb */
+  /* TheMealDB publishes an openly-usable ingredient photo library at a
+     PREDICTABLE URL, so there is no API call and no key -- we can build the
+     address from the ingredient name alone. Studio shots on white, which is
+     exactly what a small table tile wants. Coverage is good for common
+     ingredients and thin for regional ones, so `probe()` checks before we
+     commit to it and the chain falls through to Commons when it misses. */
+  const themealdb = {
+    id: 'themealdb', capability: 'photo', label: 'TheMealDB ingredient images (no key)',
+    needsKey: null,
+
+    urlFor(name, size = 'Small') {
+      /* "Okra (Bhindi)" is filed as "Okra". */
+      const base = String(name).replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+      return `https://www.themealdb.com/images/ingredients/${encodeURIComponent(base)}-${size}.png`;
+    },
+
+    async search(query, opts = {}) {
+      const name = String(query).replace(/ food ingredient$/, '').trim();
+      const url = themealdb.urlFor(name, opts.size || 'Small');
+      const ok = await probeImage(url);
+      if (!ok) return [];
+      return [{
+        url,
+        credit: 'TheMealDB',
+        creditUrl: 'https://www.themealdb.com/',
+        source: 'themealdb',
+      }];
+    },
+  };
+
+  /* ---------------------------------------------------------------- chain */
+  /* Try each source in order and take the first that answers. Keeps the
+     keyless sources working together instead of forcing a single choice. */
+  function chainOf(ids) {
+    return {
+      id: ids.join('+'), capability: 'photo', label: `${ids.join(' then ')} (no key)`,
+      needsKey: null,
+      async search(query, opts = {}) {
+        for (const id of ids) {
+          const provider = AFR.providers[`photo${id.charAt(0).toUpperCase()}${id.slice(1)}`];
+          if (!provider) continue;
+          try {
+            const hits = await provider.search(query, opts);
+            if (hits && hits.length) return hits;
+          } catch (err) {
+            /* A network-level failure will hit every source, so stop early. */
+            if (/failed to fetch|networkerror|load failed/i.test(err.message || '')) throw err;
+          }
+        }
+        return [];
+      },
+    };
+  }
+
+  /**
+   * Does this image URL actually resolve? Uses an Image element rather than
+   * fetch, because image loads are not subject to CORS -- which is what lets
+   * us check a keyless CDN URL from the browser at all.
+   */
+  function probeImage(url) {
+    if (typeof global.Image !== 'function') return Promise.resolve(false);
+    return new Promise((resolve) => {
+      const img = new global.Image();
+      const done = (result) => { img.onload = null; img.onerror = null; resolve(result); };
+      img.onload = () => done(img.naturalWidth > 1);
+      img.onerror = () => done(false);
+      setTimeout(() => done(false), 6000); // never hang the pipeline
+      img.src = url;
+    });
+  }
+
   /* ----------------------------------------------------------------- local */
   const local = {
     id: 'local', capability: 'photo', label: 'Drawn plates (offline, no network)',
@@ -161,6 +233,12 @@
     photoUnsplash: unsplash,
     photoWikimedia: wikimedia,
     photoYoutube: youtubeThumbs,
+    photoThemealdb: themealdb,
     photoLocal: local,
   });
+
+  /* The default ingredient source: a fast keyless CDN lookup, falling back to
+     Commons for anything TheMealDB has never heard of (most regional veg). */
+  AFR.providers.photoOpenChain = chainOf(['themealdb', 'wikimedia']);
+  AFR.providers._probeImage = probeImage;
 })(window);

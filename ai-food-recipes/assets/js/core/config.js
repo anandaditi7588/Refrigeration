@@ -35,9 +35,11 @@
       /* Real photography. 'youtube' reuses the video thumbnails you already
          fetched (no extra key); 'pexels' / 'unsplash' need their own free key. */
       photo: 'local',        // 'youtube' | 'pexels' | 'unsplash' | 'wikimedia'
-      /* Ingredient tiles are generic objects, so they default to the keyless
-         Wikimedia Commons source regardless of the dish photo provider. */
-      ingredientPhoto: 'wikimedia',
+      /* Ingredient tiles use openly-licensed sources that need no key at all:
+         TheMealDB's ingredient CDN first (fast, predictable URLs, studio shots)
+         then Wikimedia Commons for anything it lacks -- which is most regional
+         vegetables. Independent of `providers.photo`. */
+      ingredientPhoto: 'themealdb+wikimedia',
     },
 
     /* Preferred, safe integration path: a small server of yours that holds the
