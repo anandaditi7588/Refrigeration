@@ -24,6 +24,21 @@
     /** Escape a string used inside an HTML attribute value. */
     escAttr(value) { return U.esc(value); },
 
+    /** The inverse, for text that arrives already HTML-escaped. Google's
+     *  Cloud Translation API returns &#39; and &amp; in its output, and that
+     *  text is escaped again on the way to the DOM — without this you get a
+     *  visible "&amp;#39;" in the middle of a translated step. */
+    decodeEntities(value) {
+      const named = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+      return String(value === null || value === undefined ? '' : value)
+        .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(Number(dec)))
+        .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+        .replace(/&([a-z]+);/gi, (whole, name) => {
+          const key = name.toLowerCase();
+          return Object.prototype.hasOwnProperty.call(named, key) ? named[key] : whole;
+        });
+    },
+
     slug(value) {
       return String(value || '')
         .toLowerCase()

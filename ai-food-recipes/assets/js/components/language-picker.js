@@ -33,16 +33,27 @@
           </button>`).join('')}
       </div>`).join('');
 
-    /* What the choice does depends entirely on the configured provider. */
+    /* What the choice does depends entirely on the configured provider, and
+       there are now three genuinely different answers. */
     const aiLive = AFR.config.isLive('ai');
-    const notice = aiLive
-      ? `<i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-         <span>Your recipes will be written in the language you pick, all 20 sections.</span>`
-      : `<i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-         <span><strong>Recipes stay in English right now.</strong> The built-in offline engine
-         composes English text and cannot translate itself. Set
-         <code>providers.ai</code> to a hosted model in <code>config.js</code> and the whole
-         recipe arrives in your chosen language. The interface below translates either way.</span>`;
+    const translateOn = AFR.providers.resolveTranslate
+      && AFR.providers.resolveTranslate().id !== 'none';
+
+    let notice;
+    if (aiLive) {
+      notice = `<i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        <span>All 20 sections are written in the language you pick, natively.</span>`;
+    } else if (translateOn) {
+      notice = `<i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        <span><strong>Interface and recipes both switch.</strong> The recipe is composed in
+        English and then machine-translated, so ingredient names, every cooking step, tips
+        and the shopping list all arrive in your language. Needs an internet connection —
+        a published Artifact page blocks the request.</span>`;
+    } else {
+      notice = `<i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        <span><strong>Only the interface switches.</strong> Translation is turned off
+        (<code>providers.translate: 'none'</code>), so recipe text stays in English.</span>`;
+    }
 
     return `
       <div class="afr-lang__head">
@@ -103,9 +114,11 @@
       const lang = AFR.i18n.setLanguage(option.dataset.lang);
       label();
       close();
+      const recipesToo = AFR.config.isLive('ai')
+        || (AFR.providers.resolveTranslate && AFR.providers.resolveTranslate().id !== 'none');
       UI.toast(
         lang.uiReady
-          ? `Language set to ${lang.native}.`
+          ? `Language set to ${lang.native}.${recipesToo ? ' New recipes will be in this language too.' : ''}`
           : `Recipes will be written in ${lang.name}. ${AFR.i18n.t('lang.uiPartial')}`,
         'ok', 4200);
     });

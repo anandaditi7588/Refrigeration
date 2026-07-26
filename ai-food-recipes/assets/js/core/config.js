@@ -40,6 +40,14 @@
          then Wikimedia Commons for anything it lacks -- which is most regional
          vegetables. Independent of `providers.photo`. */
       ingredientPhoto: 'themealdb+wikimedia',
+      /* Makes the OFFLINE engine multilingual: the recipe is composed in
+         English, then translated into whatever language the user picked.
+         'googleFree' needs no key and works from a static page. Use
+         'googleCloud' (with keys.googleTranslate) or 'proxy' for production
+         traffic, or 'none' to leave recipes in English.
+         Ignored when `ai` is a hosted model -- those are asked to write in the
+         target language directly, which reads better than translating after. */
+      translate: 'googleFree',   // 'googleFree' | 'googleCloud' | 'proxy' | 'none'
     },
 
     /* Preferred, safe integration path: a small server of yours that holds the
@@ -49,6 +57,7 @@
       ai: '',        // e.g. 'https://api.example.com/ai/recipe'
       video: '',     // e.g. 'https://api.example.com/youtube/search'
       recipe: '',    // e.g. 'https://api.example.com/recipes/search'
+      translate: '', // e.g. 'https://api.example.com/translate'
     },
 
     /* Direct-from-browser keys. Only for local development — anything here is
@@ -61,6 +70,7 @@
       pexels: '',
       unsplash: '',
       spoonacular: '',
+      googleTranslate: '',   // only for providers.translate = 'googleCloud'
       edamam: { appId: '', appKey: '' },
     },
 
@@ -78,6 +88,7 @@
 
     generation: {
       timeoutMs: 25000,        // per-provider ceiling before we fall through
+      translateTimeoutMs: 30000, // ceiling on translating a finished recipe
       maxVideos: 6,
       maxSources: 8,
       minStepCount: 6,

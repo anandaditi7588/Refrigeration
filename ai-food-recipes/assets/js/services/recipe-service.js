@@ -28,7 +28,8 @@
     { id: 'sources', label: 'Searching videos and recipe sources', weight: 0.22 },
     { id: 'generate', label: 'Composing your recipe', weight: 0.42 },
     { id: 'nutrition', label: 'Scaling ingredients and nutrition', weight: 0.16 },
-    { id: 'finish', label: 'Assembling all 20 sections', weight: 0.12 },
+    { id: 'translate', label: 'Translating the recipe', weight: 0.10 },
+    { id: 'finish', label: 'Assembling all 20 sections', weight: 0.02 },
   ];
 
   /** Never let one bad provider break generation. */
@@ -212,9 +213,43 @@
 
     advance(3, 1);
 
-    /* ------------------------------------------------------- 5. finalise */
-    onStage('finish', STAGES[4].label);
-    advance(4, 0.5);
+    /* ------------------------------------------------------ 5. translate */
+    /* Only the offline engine needs this. A hosted model was already asked to
+       write in the target language (see prompt-builder.js), and its native
+       prose reads better than a translation of English. */
+    const language = answers.language || 'en';
+    let translationReport = null;
+
+    if (language !== 'en' && recipe.meta.provider === 'local' && AFR.translation) {
+      onStage('translate', `Translating into ${AFR.data.languages.get(language).name}`);
+      advance(4, 0.05);
+
+      /* Belt and braces: the service has its own breaker and deadline, but a
+         provider that neither resolves nor rejects must not strand the user
+         on a spinner. A partly-translated recipe is still fully readable. */
+      translationReport = await attempt('Translation', () =>
+        U.withTimeout(
+          AFR.translation.translateRecipe(recipe, language, {
+            onProgress: (fraction) => advance(4, 0.05 + fraction * 0.95),
+          }),
+          AFR.config.generation.translateTimeoutMs || 30000,
+          'Translation'), warnings);
+
+      if (translationReport) {
+        warnings.push(...translationReport.warnings);
+        if (translationReport.translated || translationReport.cached) {
+          sourcesUsed.push(`translate:${translationReport.provider}`);
+        }
+      } else {
+        /* attempt() already recorded the reason; say what it means for them. */
+        warnings.push('The translator could not be reached, so this recipe is in English.');
+      }
+    }
+    advance(4, 1);
+
+    /* ------------------------------------------------------- 6. finalise */
+    onStage('finish', STAGES[5].label);
+    advance(5, 0.5);
 
     recipe.meta.warnings = U.unique(recipe.meta.warnings.concat(warnings));
     recipe.meta.sourcesUsed = U.unique(sourcesUsed);
@@ -224,16 +259,27 @@
       recipe: AFR.config.isLive('recipe'),
     };
     recipe.meta.generatedAt = new Date().toISOString();
-    recipe.meta.language = answers.language || 'en';
+    recipe.meta.language = language;
+    recipe.meta.translation = translationReport;
 
-    /* Say it plainly rather than silently returning English. */
-    if (recipe.meta.language !== 'en' && recipe.meta.provider === 'local') {
-      recipe.meta.warnings.push(
-        `This recipe is in English: the built-in offline engine cannot write ${AFR.data.languages.get(recipe.meta.language).name}. `
-        + 'Configure an AI provider in config.js and it will be written in your chosen language.');
+    /* Be specific about what the reader is actually looking at. */
+    if (language !== 'en' && recipe.meta.provider === 'local') {
+      const langName = AFR.data.languages.get(language).name;
+      if (!translationReport || !(translationReport.translated || translationReport.cached)) {
+        recipe.meta.warnings.push(
+          `This recipe is in English — ${langName} translation was unavailable. `
+          + 'It needs a working internet connection, and a published Artifact page blocks the request entirely.');
+      } else if (translationReport.failed) {
+        recipe.meta.warnings.push(
+          `Most of this recipe is in ${langName}; ${translationReport.failed} phrase(s) stayed in English.`);
+      } else {
+        recipe.meta.warnings.push(
+          `Translated into ${langName} by machine translation. Quantities, temperatures and timings are unchanged — `
+          + 'check any ingredient name that looks unfamiliar against the English original.');
+      }
     }
 
-    advance(4, 1);
+    advance(5, 1);
     return recipe;
   }
 
