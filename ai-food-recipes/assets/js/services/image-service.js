@@ -269,7 +269,55 @@
   /** "Yogurt (Curd)" searches far better as "Yogurt". */
   function searchTermFor(name) {
     const base = String(name).replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
-    return `${base || name} food ingredient`;
+    return base || String(name);
+  }
+
+  /**
+   * Search terms to try, in order, stopping at the first that returns anything.
+   *
+   * Commons search is AND-based: every word has to appear. Appending context
+   * words the way this used to — "Onion food ingredient", "Puran Poli food
+   * dish" — therefore does not bias the results, it demands all of those terms
+   * and usually returns nothing at all. Going the other way works: ask for the
+   * exact name, then progressively drop words until something matches.
+   *
+   * @param {string} name  dish or ingredient name
+   * @param {string} [hint] one optional context word, tried only as a LAST
+   *        resort on a single-word name ("Salt" alone is ambiguous on Commons)
+   */
+  function queryVariants(name, hint) {
+    const base = searchTermFor(name);
+    const words = base.split(/\s+/).filter(Boolean);
+    const tries = [base];
+
+    /* "Ukadiche Modak" -> also try "Modak"; the distinctive word is usually
+       the last one in a dish name, and the first one in an ingredient name. */
+    if (words.length > 2) tries.push(words.slice(-2).join(' '));
+    if (words.length > 1) {
+      tries.push(words[words.length - 1]);
+      tries.push(words[0]);
+    }
+    if (hint && words.length === 1) tries.push(`${base} ${hint}`);
+
+    return U.unique(tries.filter((t) => t && t.length > 2));
+  }
+
+  /**
+   * Run a provider search across the variants, returning the first non-empty
+   * result. Bounded to three requests so a dish nothing matches costs little.
+   */
+  async function searchWithFallback(provider, name, opts = {}, hint, maxTries = 3) {
+    /* How far it is safe to broaden depends on what is being looked up. An
+       ingredient name is already a single subject, so dropping to one word is
+       still the same thing. A dish name is not: broadening "Paneer Butter
+       Masala" as far as "Masala" would illustrate the card with something that
+       is not the dish, which is worse than keeping the drawing. */
+    const variants = queryVariants(name, hint).slice(0, Math.max(1, maxTries));
+    for (const term of variants) {
+      const hits = await provider.search(term, opts);
+      if (hits && hits.length) return hits;
+    }
+    return [];
   }
 
   /**
@@ -319,7 +367,7 @@
     await mapLimit(misses, 4, async (name) => {
       if (networkDown) return;
       try {
-        const hits = await provider.search(searchTermFor(name), { count: 4, width: 320 });
+        const hits = await searchWithFallback(provider, name, { count: 4, width: 320 }, 'food');
         const best = pickBestFor(name, hits);
         cache[name] = best
           ? { url: best.url, credit: best.credit, creditUrl: best.creditUrl }
@@ -417,7 +465,7 @@
     if (!provider) return '';
 
     try {
-      const hits = await provider.search(`${key} food dish`, { count: 3, width: 640 });
+      const hits = await searchWithFallback(provider, key, { count: 3, width: 640 }, 'food', 2);
       const best = (hits && hits[0]) || null;
       cache[key] = best
         ? { url: best.url, credit: best.credit, creditUrl: best.creditUrl }
@@ -456,6 +504,9 @@
     prefetch,
     prefetchIngredients,
     photoForDish,
+    /* Exposed so the setup page can run the exact search the app runs. */
+    searchPhotos: searchWithFallback,
+    queryVariants,
     clearDishCache() { dishCache = {}; AFR.store.set(DISH_CACHE_KEY, {}); },
 
     /** Attribution records for whatever photography ended up being used. */

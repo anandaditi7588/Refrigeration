@@ -125,16 +125,41 @@
     },
     {
       id: 'wikimedia',
-      name: 'Wikimedia Commons',
-      what: 'Ingredient photographs. No key needed at all, so this should pass immediately.',
+      name: 'Wikimedia Commons photographs — run this if pictures look drawn',
+      what: 'The keyless source behind every photograph in the app: the dish picture on '
+        + 'each browsing card, the recipe hero, and the ingredient tiles. Needs no key, so '
+        + 'it should pass immediately. This runs the exact searches the app runs and prints '
+        + 'what came back, which is the fastest way to see why a picture stayed a drawing.',
       keyField: null,
       where: 'Nothing to do - it is keyless.',
       free: 'Unlimited, within polite use.',
-      enables: "providers.ingredientPhoto = 'wikimedia' (already the default)",
+      enables: "providers.photo and providers.ingredientPhoto (both already the default)",
       async run() {
-        const photos = await AFR.providers.photoWikimedia.search('tomato food ingredient', { count: 2 });
-        if (!photos.length) throw new Error('The call succeeded but returned no images.');
-        return photos.map((p) => `${p.url}\n    credit: ${p.credit}`);
+        /* A dish name, a plain ingredient and an Indian vegetable — the three
+           shapes of query the app makes, so a failure says which shape broke. */
+        const probes = ['Paneer Butter Masala', 'Tomato', 'Okra'];
+        const lines = [];
+        let found = 0;
+
+        for (const probe of probes) {
+          const photos = await AFR.images.searchPhotos(AFR.providers.photoWikimedia, probe,
+            { count: 2, width: 320 });
+          if (photos.length) {
+            found += 1;
+            lines.push(`${probe}: ${photos.length} found`);
+            lines.push(`    ${photos[0].url}`);
+            lines.push(`    credit: ${photos[0].credit}`);
+          } else {
+            lines.push(`${probe}: NO RESULTS — Commons has nothing matching this name`);
+          }
+        }
+
+        if (!found) {
+          throw new Error(`The API answered but returned no images for any of ${probes.join(', ')}. `
+            + 'That points at the search terms rather than the connection.');
+        }
+        lines.unshift(`${found} of ${probes.length} searches returned photographs.`);
+        return lines;
       },
     },
     {
