@@ -129,6 +129,19 @@
     ['cumin', 'Cumin Seeds', 'spices', 'tsp', 2.5, 375, 18, 44, 22, 11, 2.3, 168, 0, 60, 'Ground cumin (¾ tsp)', 'Whole seeds, toasted fresh', 'Nutty aroma released in hot fat', { iron: 66 }],
     ['coriander-powder', 'Coriander Powder', 'spices', 'tsp', 2.5, 298, 12, 55, 18, 42, 0, 35, 0, 40, 'Toasted, ground coriander seeds', 'Freshly ground seeds', 'Body and mellow citrus tone'],
     ['garam-masala', 'Garam Masala', 'spices', 'tsp', 2.5, 379, 14, 45, 15, 24, 2, 60, 0, 120, 'Curry powder or allspice + cinnamon', 'Home-ground fresh blend', 'Finishing warmth — added late'],
+    /* Regional blends the dish knowledge base calls for by name. Without their
+       own entries they were resolved by substring to plain garam masala, which
+       is precisely the kind of quiet wrong answer this file exists to avoid. */
+    ['pav-bhaji-masala', 'Pav Bhaji Masala', 'spices', 'tsp', 2.5, 340, 12, 48, 11, 22, 3, 900, 0, 130, 'Garam masala plus amchur', 'Home-ground blend, no added salt', 'The blend that makes pav bhaji taste of pav bhaji'],
+    ['chole-masala', 'Chole Masala', 'spices', 'tsp', 2.5, 345, 13, 47, 12, 23, 2, 700, 0, 130, 'Garam masala plus amchur and anardana', 'Freshly ground with dried pomegranate seed', 'Sour-warm blend specific to chole'],
+    ['sambar-powder', 'Sambar Powder', 'spices', 'tsp', 2.5, 350, 14, 46, 13, 25, 2, 40, 0, 120, 'Coriander powder plus red chilli', 'Home-roasted and ground', 'Roasted dal and chilli blend at the heart of sambar'],
+    ['amchur', 'Amchur (Dried Mango)', 'spices', 'tsp', 2.5, 310, 2, 76, 1, 6, 40, 25, 0, 90, 'Lemon juice, added at the end', 'Fresh lemon or tamarind', 'Sourness without adding liquid'],
+    ['kasuri-methi', 'Kasuri Methi', 'herbs', 'tsp', 1.5, 320, 23, 58, 6, 25, 0, 70, 0, 140, 'Fresh fenugreek leaves', 'Home-dried methi leaves', 'Crushed in at the end — the aroma of a north Indian gravy'],
+    ['dried-red-chilli', 'Dried Red Chilli', 'spices', 'pieces', 1, 318, 12, 57, 17, 27, 10, 30, 0, 100, 'Red chilli flakes', 'Kashmiri chilli for colour without heat', 'Whole, bloomed in hot fat'],
+    ['nutmeg', 'Nutmeg', 'spices', 'tsp', 2.2, 525, 6, 49, 36, 21, 3, 16, 0, 200, 'Mace or allspice', 'Freshly grated whole nutmeg', 'A scrape only — it rounds sweetness'],
+    ['poppy-seeds', 'Poppy Seeds (Khus Khus)', 'nuts', 'tsp', 3, 525, 18, 28, 42, 20, 3, 26, 0, 160, 'Sesame seeds or cashew paste', 'Lightly roasted before grinding', 'Thickening and a nutty background', { calcium: 1438 }],
+    ['eno', 'Eno (Fruit Salt)', 'condiments', 'tsp', 5, 0, 0, 0, 0, 0, 0, 2400, 0, 40, 'Baking soda plus extra lemon juice', 'Baking soda and lemon', 'Added last — it aerates the batter on contact'],
+    ['farsan', 'Farsan (Sev Mixture)', 'others', 'cups', 60, 520, 12, 52, 29, 6, 2, 700, 0, 60, 'Plain sev or bhujia', 'Baked chivda instead of fried', 'The crunch on top — added at the table'],
     ['red-chilli-powder', 'Red Chilli Powder', 'spices', 'tsp', 2.5, 282, 13, 50, 14, 35, 7, 30, 0, 70, 'Paprika (for colour) or cayenne (for heat)', 'Kashmiri chilli — colour without burn', 'Heat and deep red colour'],
     ['paprika', 'Paprika', 'spices', 'tsp', 2.3, 282, 14, 54, 13, 35, 10, 68, 0, 85, 'Kashmiri chilli powder', 'Smoked paprika', 'Colour with gentle warmth'],
     ['cinnamon', 'Cinnamon', 'spices', 'pieces', 2, 247, 4, 81, 1.2, 53, 2.2, 10, 0, 100, 'Cassia bark or ¼ tsp ground', 'Ceylon cinnamon', 'Sweet warm spice'],
@@ -176,12 +189,21 @@
     ['oats', 'Oats', 'grains', 'cups', 90, 389, 17, 66, 6.9, 11, 0.99, 2, 0, 14, 'Quinoa flakes or broken wheat', 'Steel-cut oats', 'Fibre-rich body', { magnesium: 177 }],
     ['quinoa', 'Quinoa', 'grains', 'cups', 170, 368, 14, 64, 6.1, 7, 0, 5, 0, 60, 'Couscous or brown rice', 'Rinsed white quinoa', 'Complete-protein grain'],
     ['semolina', 'Semolina (Rava)', 'grains', 'cups', 167, 360, 13, 73, 1.1, 3.9, 0.6, 1, 0, 8, 'Cream of wheat or fine cornmeal', 'Whole-wheat semolina', 'Crisp texture and body'],
+    ['rice-flour', 'Rice Flour', 'grains', 'cups', 158, 366, 6, 80, 1.4, 2.4, 0.1, 10, 0, 9, 'Fine semolina', 'Brown rice flour', 'Crispness, and the shell of steamed dumplings'],
+    ['idli-rice', 'Idli Rice (Par-boiled)', 'grains', 'cups', 185, 360, 7.5, 79, 0.6, 2.2, 0.1, 5, 0, 9, 'Any short-grain par-boiled rice', 'Hand-pounded par-boiled rice', 'Ferments into a soft, light batter'],
+    ['jowar-flour', 'Jowar Flour (Sorghum)', 'grains', 'cups', 150, 349, 10, 72, 3.3, 6.7, 2.5, 2, 0, 10, 'Bajra or ragi flour', 'Freshly milled whole jowar', 'Naturally gluten-free multigrain base', { iron: 4.4, magnesium: 165 }],
     ['cornflour', 'Cornflour', 'grains', 'tbsp', 8, 381, 0.3, 91, 0.1, 0.9, 0, 9, 0, 12, 'Arrowroot or potato starch', 'Arrowroot powder', 'Thickens sauces to a glossy coat'],
     ['tortilla', 'Tortilla', 'grains', 'pieces', 45, 306, 8, 51, 7.7, 3, 1.5, 550, 0, 20, 'Roti, pita or lettuce leaves', 'Whole-corn tortilla', 'The wrap'],
 
     // ------------------------------------------------------------- legumes
     ['toor-dal', 'Toor Dal', 'legumes', 'cups', 200, 343, 22, 63, 1.5, 15, 2, 17, 0, 14, 'Masoor or moong dal', 'Split pigeon peas, unpolished', 'Creamy protein base'],
     ['moong-dal', 'Moong Dal', 'legumes', 'cups', 200, 347, 24, 63, 1.2, 16, 6.6, 15, 0, 15, 'Toor or masoor dal', 'Whole green moong (more fibre)', 'Light, easily digested protein'],
+    /* Added for the dish knowledge base — these are the pulses and flours that
+       named regional dishes actually call for, and estimating them by category
+       gave noticeably wrong nutrition. */
+    ['chana-dal', 'Chana Dal', 'legumes', 'cups', 200, 364, 22, 60, 5.3, 17, 8, 16, 0, 13, 'Toor dal', 'Whole kala chana', 'Sweet, nutty split gram'],
+    ['urad-dal', 'Urad Dal', 'legumes', 'cups', 200, 341, 25, 59, 1.6, 18, 2, 14, 0, 16, 'Moong dal', 'Whole black urad', 'Ferments to give idli and dosa their lift'],
+    ['moth-beans', 'Moth Beans (Matki)', 'legumes', 'cups', 190, 343, 23, 62, 1.6, 15, 2, 15, 0, 14, 'Sprouted moong', 'Sprouted, not boiled', 'The bean misal is built on'],
     ['chickpeas', 'Chickpeas', 'legumes', 'cups', 164, 364, 19, 61, 6, 17, 11, 24, 0, 12, 'White beans or black chana', 'Home-soaked dried chickpeas', 'Hearty plant protein', { iron: 6.2, magnesium: 115 }],
     ['kidney-beans', 'Kidney Beans (Rajma)', 'legumes', 'cups', 177, 333, 24, 60, 0.8, 25, 2.1, 12, 0, 13, 'Black beans or chickpeas', 'Soaked overnight, well boiled', 'Meaty plant protein', { iron: 8.2, potassium: 1406 }],
     ['lentils', 'Red Lentils', 'legumes', 'cups', 192, 352, 25, 63, 1.1, 11, 2, 6, 0, 12, 'Any split lentil', 'Whole masoor (more fibre)', 'Quick-cooking protein and body'],

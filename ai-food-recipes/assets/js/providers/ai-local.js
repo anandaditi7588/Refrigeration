@@ -130,11 +130,19 @@
     const dish = U.titleCase(dishRaw);
     const lower = dishRaw.toLowerCase();
 
+    /* Does the app actually KNOW this dish? A known dish brings its own real
+       ingredients and method, which is the difference between answering
+       "Puran Poli" and guessing at it from the words in the name. Everything
+       downstream — scaling, diet swaps, nutrition, costing — is unchanged. */
+    const known = (AFR.data.dishes && AFR.data.dishes.match(dishRaw)) || null;
+
     const cuisineId = (!answers.cuisine || answers.cuisine === 'auto')
-      ? AFR.data.cuisines.detect(dishRaw)
+      ? (known ? known.dish.cuisine : AFR.data.cuisines.detect(dishRaw))
       : answers.cuisine;
     const cuisine = AFR.data.cuisines.get(cuisineId);
-    const technique = AFR.data.techniques.detect(dishRaw);
+    const technique = known
+      ? AFR.data.dishes.toTechnique(known.dish)
+      : AFR.data.techniques.detect(dishRaw);
 
     const servings = Math.max(1, parseInt(answers.servings, 10) || 4);
     const diet = (Array.isArray(answers.diet) ? answers.diet : [answers.diet]).filter(Boolean);
@@ -159,7 +167,9 @@
     const isVeg = diet.some((d) => ['vegetarian', 'vegan', 'jain', 'eggetarian'].includes(d));
     const isVegan = diet.includes('vegan');
 
-    /* Detect the protein and the vegetable/starch base from the dish name. */
+    /* Detect the protein and the vegetable/starch base from the dish name.
+       A known dish already carries its real ingredient list, so these hints
+       only matter for the generic composition path. */
     let protein = hintLookup(lower, PROTEIN_HINTS);
     let base = hintLookup(lower, BASE_HINTS);
 
@@ -173,7 +183,7 @@
     /* Only invent a protein when the dish names no main ingredient at all.
        "Bhendi Masala" and "Aloo Gobi" are ABOUT their vegetable -- injecting a
        default paneer turned every vegetable curry into a paneer curry. */
-    if (!protein && !base && ['curry', 'riceDish', 'stirFry', 'grilled', 'assembly'].includes(technique.id)) {
+    if (!known && !protein && !base && ['curry', 'riceDish', 'stirFry', 'grilled', 'assembly'].includes(technique.id)) {
       const fallback = isVegan ? 'tofu' : isVeg ? 'paneer' : diet.includes('non-vegetarian') ? 'chicken' : 'paneer';
       protein = AFR.data.ingredients.byId[fallback];
     }
@@ -183,6 +193,8 @@
       answers,
       dish, dishRaw,
       cuisine, technique, servings,
+      known: known ? known.dish : null,
+      knownConfidence: known ? known.confidence : 0,
       protein, base, proteinExplicit,
       diet, allergies, appliances, avoid, available,
       notes: U.clean(answers.notes),
@@ -850,7 +862,16 @@
       : c.heat.level >= 5 ? ' The heat is deliberately assertive, layered in at two separate stages.'
         : ` The heat sits at ${c.heat.label.toLowerCase()}, warm enough to notice without dominating.`;
 
-    return `${styleWord.charAt(0).toUpperCase()}${styleWord.slice(1)} take on ${c.dish}, scaled for ${c.servings} ${c.servings === 1 ? 'person' : 'people'} and cooked ${c.cuisine.id === 'global' ? 'with a global approach' : `in the ${c.cuisine.name} tradition`}.${dietBit}${heatBit} Every quantity below is calculated for your serving count, and the nutrition panel is worked out from the actual ingredient list rather than a generic estimate.`;
+    /* A dish we actually know deserves its own description; the generic one
+       would describe the technique rather than the dish. */
+    const opening = c.known
+      ? `${c.known.summary} This version is scaled for ${c.servings} ${c.servings === 1 ? 'person' : 'people'}`
+        + `${c.known.region ? `, in the ${c.known.region} style` : ''}.`
+      : `${styleWord.charAt(0).toUpperCase()}${styleWord.slice(1)} take on ${c.dish}, scaled for ${c.servings} `
+        + `${c.servings === 1 ? 'person' : 'people'} and cooked `
+        + `${c.cuisine.id === 'global' ? 'with a global approach' : `in the ${c.cuisine.name} tradition`}.`;
+
+    return `${opening}${dietBit}${heatBit} Every quantity below is calculated for your serving count, and the nutrition panel is worked out from the actual ingredient list rather than a generic estimate.`;
   }
 
   function difficultyOf(c) {
@@ -946,6 +967,7 @@
         provider: 'local',
         mode: 'generated',
         warnings: warnings.concat(timeNote ? [] : []),
+        knownDish: c.known ? c.known.id : null,
         context: {
           techniqueId: c.technique.id, cuisineId: c.cuisine.id,
           heatLevel: c.heat.level, servings: c.servings,
@@ -955,7 +977,23 @@
 
     applyNotes(c, recipe);
 
-    /* Keep the honest-labelling promise: the local engine is not the internet. */
+    /* Keep the honest-labelling promise: the local engine is not the internet.
+       The most important case is a dish it does not know. It will still return
+       something coherent, because a technique and a cuisine profile always
+       compose — but coherent is not the same as correct, and presenting a
+       guess as a recipe is the one failure worth warning about every time. */
+    if (!c.known && !AFR.config.isLive('ai')) {
+      recipe.meta.warnings.push(
+        `"${c.dish}" is not in the built-in recipe collection, so this was composed from its `
+        + `${c.technique.name.toLowerCase()} technique and the ${c.cuisine.name} flavour profile. `
+        + 'It will cook, but it may not be the authentic version of this dish. '
+        + 'For any dish by name, add a Gemini key on the Live Data page — the model knows the '
+        + 'dish and writes it directly, in your chosen language.');
+      recipe.meta.confidence = 'composed';
+    } else {
+      recipe.meta.confidence = c.known ? 'known' : 'ai';
+    }
+
     recipe.meta.warnings = U.unique(recipe.meta.warnings);
 
     if (AFR.config.generation.simulateLatencyMs) {
