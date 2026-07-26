@@ -78,7 +78,11 @@
        tuned without touching logic. */
     models: {
       openai: 'gpt-4o-mini',
-      gemini: 'gemini-1.5-flash',
+      /* Flash models are the right trade here: one recipe is a single
+         structured-JSON call, and the cheap tier handles it well. If this name
+         ever 404s, list what your key can actually see with:
+         curl "https://generativelanguage.googleapis.com/v1beta/models?key=YOUR_KEY" */
+      gemini: 'gemini-2.0-flash',
       claude: 'claude-sonnet-4-5',
     },
 
@@ -120,4 +124,78 @@
     const name = AFR.config.providers[capability];
     return Boolean(name && name !== 'local');
   };
+
+  /* ---------------------------------------------------------------------- */
+  /* Runtime keys                                                            */
+  /* ---------------------------------------------------------------------- */
+
+  /**
+   * Keys saved on the setup page live in localStorage, not in this file, so a
+   * user can switch the app to live data without editing source or
+   * redeploying. This runs on EVERY page — previously the setup page applied
+   * them and nothing else did, which meant a pasted key tested green there and
+   * then did nothing on the page that actually generates recipes.
+   *
+   * File values win when both exist: a key committed to config.js is a
+   * deliberate deployment choice, and a stale browser entry should not
+   * silently override it.
+   */
+  /* Must match AFR.store's prefix + the setup page's key, spelled out here
+     because config.js loads before store.js and cannot use the helper. */
+  const KEY_STORE = 'afr:setup:keys';
+
+  /**
+   * Which provider a key implies. A key is only ever useful if the matching
+   * capability is actually switched on, and asking someone to paste a key AND
+   * know which provider string to set is a trap.
+   */
+  const IMPLIES = {
+    gemini: { ai: 'gemini' },
+    openai: { ai: 'openai' },
+    claude: { ai: 'claude' },
+    youtube: { video: 'youtube', photo: 'youtube' },
+    pexels: { photo: 'pexels' },
+    unsplash: { photo: 'unsplash' },
+    spoonacular: { recipe: 'spoonacular' },
+  };
+
+  AFR.config.applyStoredKeys = function () {
+    let saved = {};
+    try {
+      saved = JSON.parse(global.localStorage.getItem(KEY_STORE) || '{}') || {};
+    } catch (err) {
+      return { applied: [], enabled: {} };
+    }
+
+    const applied = [];
+    const enabled = {};
+
+    Object.keys(saved).forEach((field) => {
+      const value = String(saved[field] || '').trim();
+      if (!value) return;
+      /* Never clobber a key that was deliberately committed to this file. */
+      if (AFR.config.keys[field]) return;
+
+      AFR.config.keys[field] = value;
+      applied.push(field);
+
+      /* Switch the capability on, but only where the user has not already
+         chosen a provider themselves. */
+      const implied = IMPLIES[field] || {};
+      Object.keys(implied).forEach((capability) => {
+        if (AFR.config.providers[capability] === 'local') {
+          AFR.config.providers[capability] = implied[capability];
+          enabled[capability] = implied[capability];
+        }
+      });
+    });
+
+    return { applied, enabled };
+  };
+
+  /* Applied immediately so every page — including the one that generates
+     recipes — sees the same configuration. */
+  AFR.config.runtime = AFR.config.applyStoredKeys();
+  AFR.config.KEY_STORE = KEY_STORE;
+  AFR.config.KEY_IMPLIES = IMPLIES;
 })(window);

@@ -52,8 +52,13 @@
 
     /* Resolve each ingredient against the pantry so images, grouping, cost and
        the nutrition cross-check all work even when the model omitted them. */
+    let resolvedCount = 0;
     recipe.ingredients = recipe.ingredients.map((line) => {
       const item = AFR.data.ingredients.resolve(line.name);
+      /* resolve() always returns something usable, flagging a guessed entry
+         with `estimated`. Counting only genuine pantry matches is what decides
+         whether the local nutrition cross-check below means anything at all. */
+      if (item && !item.estimated) resolvedCount += 1;
       const grams = line.grams || (parseFloat(line.qty) || 1) * (item.gramsPerUnit || 50);
       return Object.assign({}, line, {
         item,
@@ -77,11 +82,29 @@
     recipe.serving.image = recipe.serving.image || AFR.images.serving(`${recipe.name} served`);
 
     /* Nutrition: trust the model's numbers if they look sane, otherwise
-       recompute from the resolved ingredient list. */
+       recompute from the resolved ingredient list.
+
+       The cross-check is only valid when the ingredients actually matched the
+       pantry. When the model writes in Marathi or Arabic, or names a regional
+       ingredient the pantry lacks, almost nothing resolves and the local figure
+       collapses towards zero — at which point "they disagree" says the local
+       number is wrong, not the model's. Overriding here is how a correct
+       420 kcal Puran Poli became 51 kcal. */
     const computed = AFR.nutrition.perServing(recipe.ingredients, servings);
+    const coverage = recipe.ingredients.length ? resolvedCount / recipe.ingredients.length : 0;
+    const canCrossCheck = coverage >= 0.6;
     const modelKcal = Number(recipe.nutrition.calories) || 0;
-    const wildlyOff = !modelKcal || Math.abs(modelKcal - computed.calories) / Math.max(computed.calories, 1) > 0.6;
-    if (wildlyOff) {
+    const disagrees = Math.abs(modelKcal - computed.calories) / Math.max(computed.calories, 1) > 0.6;
+
+    if (modelKcal && !canCrossCheck) {
+      /* Keep the model's figures, and say why they were not verified rather
+         than implying they were. */
+      recipe.nutrition = Object.assign({}, computed, recipe.nutrition);
+      recipe.nutritionNote = `Per serving, for ${servings} servings, as given by the model. `
+        + 'These could not be cross-checked locally because most ingredients here are not in the built-in food table.';
+      recipe.meta.warnings.push(
+        'Nutrition figures come from the AI model and were not verified against the local food-composition table.');
+    } else if (!modelKcal || disagrees) {
       recipe.nutrition = computed;
       recipe.nutritionNote = `Recalculated locally from the ingredient list and divided by ${servings} servings, because the model's figures were inconsistent with the ingredients it listed.`;
       recipe.meta.warnings.push('Nutrition was recomputed locally for internal consistency.');

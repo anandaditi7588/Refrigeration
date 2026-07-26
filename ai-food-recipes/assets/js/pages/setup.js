@@ -18,8 +18,39 @@
 
   const STORE_KEY = 'setup:keys';
 
-  /* Everything the page can test, described once. */
+  /* Everything the page can test, described once.
+     Gemini is first because it is the one that changes the answers themselves:
+     the built-in engine only knows dishes whose names match its keyword
+     tables, while a hosted model knows the dish. */
   const TESTS = [
+    {
+      id: 'gemini',
+      name: 'Google Gemini — writes the recipe itself',
+      what: 'Replaces the built-in offline engine. It knows dishes the keyword '
+        + 'tables have never heard of (Puran Poli, Thalipeeth, Kothimbir Vadi), and it '
+        + 'writes all 20 sections directly in your chosen language — no machine '
+        + 'translation step. This is the single biggest upgrade to answer quality.',
+      keyField: 'gemini',
+      keyLabel: 'API key',
+      where: 'aistudio.google.com/apikey -> Create API key (no billing card needed to start)',
+      free: 'Free tier covers roughly 1,500 requests/day — about 1,500 recipes.',
+      enables: "providers.ai = 'gemini'",
+      async run() {
+        const recipe = await AFR.providers.aiGemini.generate({
+          dish: 'Puran Poli', servings: 4, experience: 'intermediate', time: '60',
+          cuisine: 'auto', diet: [], spice: 'medium', sweetness: 'medium', salt: 'normal',
+          oil: 'moderate', style: 'traditional', appliances: ['stovetop'],
+          available: [], avoid: [], allergies: [], notes: '', language: 'en',
+        });
+        if (!recipe || !recipe.ingredients.length) throw new Error('The call succeeded but returned no recipe.');
+        /* Showing the ingredients is the point: this is how you check it knows
+           the dish rather than inventing a generic curry. */
+        return [
+          `${recipe.name} — ${recipe.ingredients.length} ingredients, ${recipe.steps.length} steps`,
+          ...recipe.ingredients.slice(0, 6).map((i) => `    ${i.qty} ${i.unit} ${i.name}`),
+        ];
+      },
+    },
     {
       id: 'youtube',
       name: 'YouTube Data API v3',
@@ -114,6 +145,18 @@
     if (value) keys[field] = value; else delete keys[field];
     AFR.store.set(STORE_KEY, keys);
     AFR.config.keys[field] = value || '';
+
+    /* Saving a key has to switch the capability on, otherwise it tests green
+       here and changes nothing on the page that generates recipes. Only touch
+       providers still on their default, so an explicit choice is respected. */
+    const implied = (AFR.config.KEY_IMPLIES || {})[field] || {};
+    Object.keys(implied).forEach((capability) => {
+      if (value && AFR.config.providers[capability] === 'local') {
+        AFR.config.providers[capability] = implied[capability];
+      } else if (!value && AFR.config.providers[capability] === implied[capability]) {
+        AFR.config.providers[capability] = 'local';
+      }
+    });
   }
 
   /* ---------------------------------------------------------------- render */
