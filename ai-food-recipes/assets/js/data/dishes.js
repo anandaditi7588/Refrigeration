@@ -1145,10 +1145,30 @@
     .replace(/\s+/g, ' ')
     .trim();
 
-  const INDEX = DISHES.map((dish) => ({
-    dish,
-    keys: [dish.name].concat(dish.aka || []).map(normalise).filter(Boolean),
-  }));
+  let INDEX = [];
+
+  /** Rebuild the lookup index. Called once here and again by any file that
+   *  registers more dishes, so the catalogue can grow across several files
+   *  without this one turning into a single unreadable wall of data. */
+  function reindex() {
+    INDEX = DISHES.map((dish) => ({
+      dish,
+      keys: [dish.name].concat(dish.aka || []).map(normalise).filter(Boolean),
+    }));
+  }
+  reindex();
+
+  /** Append more dishes. The whole point of the data-driven design. */
+  function register(list) {
+    (list || []).forEach((dish) => {
+      if (!dish || !dish.id) return;
+      if (DISHES.some((d) => d.id === dish.id)) return;   // never silently duplicate
+      DISHES.push(dish);
+    });
+    reindex();
+    AFR.data.dishes.count = DISHES.length;
+    AFR.data.dishes.byId = DISHES.reduce((acc, d) => { acc[d.id] = d; return acc; }, {});
+  }
 
   /**
    * Find the dish a name refers to.
@@ -1219,6 +1239,9 @@
     match,
     toTechnique,
     normalise,
+    register,
+    ing,
+    step,
     count: DISHES.length,
   };
 })(window);
