@@ -266,6 +266,32 @@
     return { count: photos.pool.length, warnings };
   }
 
+  /** "Yogurt (Curd)" searches far better as "Yogurt". */
+  function searchTermFor(name) {
+    const base = String(name).replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+    return `${base || name} food ingredient`;
+  }
+
+  /**
+   * Pick the most relevant result rather than blindly taking the first.
+   * A file whose own title mentions the ingredient is far more likely to be a
+   * picture of it than the top hit for a loose keyword search.
+   */
+  function pickBestFor(name, hits) {
+    const usable = (hits || []).filter((h) => h && h.url);
+    if (!usable.length) return null;
+    const words = U.deaccent(name).replace(/\([^)]*\)/g, ' ')
+      .split(/[^a-z0-9]+/).filter((w) => w.length > 2);
+    if (!words.length) return usable[0];
+
+    const scored = usable.map((hit) => {
+      const haystack = U.deaccent(`${hit.url} ${hit.creditUrl || ''}`);
+      return { hit, score: words.filter((w) => haystack.includes(w)).length };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    return scored[0].hit;
+  }
+
   /**
    * Photos for the ~18 ingredients a recipe actually uses, run AFTER generation
    * so we never pay for the whole 120-item pantry. Results persist in
@@ -285,14 +311,24 @@
     const wanted = U.unique(names);
     const misses = wanted.filter((name) => cache[name] === undefined);
 
+    /* If the very first lookup fails at the network level (offline, blocked by
+       a page CSP, DNS), the other seventeen will fail identically. Trip a
+       breaker rather than firing them all and filling the console. */
+    let networkDown = false;
+
     await mapLimit(misses, 4, async (name) => {
+      if (networkDown) return;
       try {
-        const hits = await provider.search(`${name} food ingredient`, { count: 1, width: 320 });
-        cache[name] = (hits && hits[0] && hits[0].url)
-          ? { url: hits[0].url, credit: hits[0].credit, creditUrl: hits[0].creditUrl }
+        const hits = await provider.search(searchTermFor(name), { count: 4, width: 320 });
+        const best = pickBestFor(name, hits);
+        cache[name] = best
+          ? { url: best.url, credit: best.credit, creditUrl: best.creditUrl }
           : { url: '' }; // remember the miss so we do not ask again
-      } catch (_) {
-        /* leave uncached, so a later run can retry after a rate limit */
+      } catch (err) {
+        if (/failed to fetch|networkerror|timed out|load failed/i.test(err.message || '')) {
+          networkDown = true;
+        }
+        /* leave uncached, so a later run can retry once the network is back */
       }
     });
     saveIngredientCache();

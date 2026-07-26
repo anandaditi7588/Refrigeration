@@ -87,7 +87,10 @@
          hero, gallery, preparation and cooking steps. */
       photosPerRecipe: 12,
       /* Look up a photo for each ingredient. Keyless via Wikimedia and cached
-         in localStorage, so the cost falls away after the first few recipes. */
+         in localStorage, so the cost falls away after the first few recipes.
+         On by default and independent of `providers.photo`, so ingredient
+         tiles are real photographs with no setup. Set false for a build that
+         makes no network requests at all. */
       ingredientPhotos: true,
     },
 

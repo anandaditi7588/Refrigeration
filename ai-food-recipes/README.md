@@ -147,8 +147,13 @@ oil absorbed during frying.
 
 ## Live data: real YouTube results and real photographs
 
-By default the app runs **entirely offline** — recipes come from its own knowledge base and
-images are drawn rather than photographed. Two free keys switch that to live data.
+**Ingredient photographs work out of the box, with no key and no setup.** They come from
+Wikimedia Commons, which needs no credentials, so the ingredient table shows real vegetables
+the first time you run the app online. Everything else — the hero shot, step photos and
+YouTube results — needs a free key.
+
+To go completely network-free, set `images.ingredientPhotos: false` in `config.js`; the app
+then falls back to its drawn plates and makes no requests at all.
 
 Open **`setup.html`** in the running app: it lists every provider, tells you where to get the
 key and what the free tier allows, and **tests your key against the real API**, showing the
@@ -164,7 +169,7 @@ actual response or the actual error. Start there rather than editing files blind
 | **YouTube Data API v3** | required | 10,000 units/day ≈ 90 searches | Real videos: titles, channels, durations, view counts, publish dates, thumbnails |
 | **Pexels** | required | 200/hour | Real food photography for the hero, gallery and every cooking step |
 | **Unsplash** | required | 50/hour (demo) | Same, alternative source. Credits the photographer automatically |
-| **Wikimedia Commons** | **none** | unlimited | Ingredient photographs. Already the default |
+| **Wikimedia Commons** | **none** | unlimited | Ingredient photographs. **On by default — no setup** |
 | **Spoonacular / Edamam** | required | 150 points/day | Recipe references and cooking-time cross-checks |
 
 ### Getting a YouTube key
@@ -195,6 +200,17 @@ keys: { youtube: 'AIza...', pexels: '...' },
 **No key for photos?** Set `photo: 'youtube'`. It reuses the thumbnails from the video search
 you are already doing, so it costs nothing extra — and the picture is genuinely of that dish,
 because it comes from a video about it.
+
+### Which images come from where
+
+| Image | Source | Needs a key? |
+|---|---|---|
+| Ingredient table tiles | `providers.ingredientPhoto` (Wikimedia) | **No** — works immediately |
+| Hero, gallery, prep and cooking steps | `providers.photo` | Yes, unless you use `youtube` |
+| Video thumbnails | `providers.video` | Yes (YouTube) |
+
+The two are deliberately independent: ingredient photos do **not** require a dish photo
+provider to be configured.
 
 ### How the images actually work
 

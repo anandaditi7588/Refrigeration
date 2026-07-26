@@ -160,8 +160,13 @@
     });
 
     /* Ingredient photos come last, once we know which ~18 the recipe uses --
-       fetching the whole pantry up front would be dozens of wasted requests. */
-    if (photoReport.count || AFR.config.providers.photo !== 'local') {
+       fetching the whole pantry up front would be dozens of wasted requests.
+       This is deliberately independent of the DISH photo provider: the
+       ingredient source (Wikimedia) needs no key, so vegetables get real
+       photographs even when nothing else is configured. */
+    if (AFR.config.images.ingredientPhotos
+        && AFR.config.providers.ingredientPhoto
+        && AFR.config.providers.ingredientPhoto !== 'local') {
       const named = await attempt('Ingredient photos',
         () => AFR.images.prefetchIngredients(recipe.ingredients.map((i) => i.name)), warnings);
       if (named) {
