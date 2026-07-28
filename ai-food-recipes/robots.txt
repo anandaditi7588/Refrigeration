@@ -1,0 +1,13 @@
+# AI Food Recipes
+#
+# Replace the Sitemap host below with your real domain after the first deploy.
+# The DEPLOY-GOOGLE.md guide has a one-line sed command that does it.
+
+User-agent: *
+Allow: /
+
+# Personal state and the API-key screen: no reason for these in an index.
+Disallow: /saved.html
+Disallow: /setup.html
+
+Sitemap: https://YOUR-SITE.web.app/sitemap.xml

@@ -1,0 +1,25 @@
+{
+  "name": "AI Food Recipes",
+  "short_name": "Recipes",
+  "description": "Describe the meal you actually want and get a complete, structured recipe built around it.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbf7f2",
+  "theme_color": "#fbf7f2",
+  "categories": ["food", "lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "./assets/img/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/img/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

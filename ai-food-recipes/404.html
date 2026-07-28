@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf7f2">
+
+  <title>Page not found &#8212; AI Food Recipes</title>
+  <meta name="description" content="That page does not exist. Head back to the recipes.">
+  <meta name="robots" content="noindex">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127858;</text></svg>">
+
+  <!--
+    Deliberately self-contained: no stylesheet, no font, no script from the app.
+
+    A 404 is served for a URL that does not exist, at any depth — /nope,
+    /a/b/c/nope — so a relative asset path resolves against a directory that
+    does not exist either, and an absolute one breaks the moment the site is
+    hosted under a sub-path (GitHub Pages project sites are /<repo>/...).
+    Inlining everything means this page renders correctly wherever it lands.
+  -->
+  <style>
+    :root {
+      --bg: #fbf7f2; --surface: #fff; --text: #2b1d12; --muted: #6f5b4a;
+      --brand: #e2670f; --brand-2: #f7862b; --border: rgba(43, 29, 18, .12);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14100c; --surface: #1d1813; --text: #f3ece4; --muted: #b3a294;
+        --brand: #ff9d45; --brand-2: #ffb46e; --border: rgba(243, 236, 228, .14);
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      padding: 32px; background: var(--bg); color: var(--text);
+      font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+    }
+    main { max-width: 560px; text-align: center; }
+    .mark {
+      width: 64px; height: 64px; margin: 0 auto 22px; border-radius: 18px;
+      display: grid; place-items: center; font-size: 1.9rem;
+      background: linear-gradient(135deg, var(--brand-2), var(--brand));
+      box-shadow: 0 8px 22px rgba(226, 103, 15, .32);
+    }
+    .code {
+      display: inline-block; margin-bottom: 10px; padding: 4px 14px;
+      border-radius: 999px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--muted);
+      font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    }
+    h1 {
+      margin: 0 0 12px; font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.2;
+      font-family: "Playfair Display", Georgia, serif; font-weight: 700;
+    }
+    p { margin: 0 0 26px; color: var(--muted); }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    a.btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 22px; border-radius: 999px; text-decoration: none;
+      font-weight: 600; font-size: .95rem; border: 1px solid transparent;
+      transition: transform .16s ease, box-shadow .24s ease;
+    }
+    a.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, .14); }
+    a.primary { background: linear-gradient(135deg, var(--brand-2), var(--brand)); color: #fff; }
+    a.ghost { background: transparent; color: var(--text); border-color: var(--border); }
+    @media (prefers-reduced-motion: reduce) { a.btn { transition: none; } a.btn:hover { transform: none; } }
+  </style>
+</head>
+
+<body>
+  <main>
+    <div class="mark" aria-hidden="true">&#127858;</div>
+    <span class="code">Error 404</span>
+    <h1>This page is not on the menu</h1>
+    <p>
+      The address you followed does not exist here. Whatever you were looking for
+      is probably one brief away &#8212; every recipe on this site is generated on
+      demand, so no dish is ever really missing.
+    </p>
+    <div class="row">
+      <a class="btn primary" id="create" href="/create.html#wizard">Create a dish</a>
+      <a class="btn ghost" id="home" href="/index.html">Back to home</a>
+    </div>
+  </main>
+
+  <script>
+    /* The links are absolute so they work from any depth, which is right for a
+       root-hosted site (Firebase, Cloud Storage, a custom domain). GitHub Pages
+       project sites live under /<repo>/, so re-root them there. */
+    (function () {
+      var seg = location.pathname.split('/')[1];
+      if (!/\.github\.io$/.test(location.hostname) || !seg) return;
+      ['create', 'home'].forEach(function (id) {
+        var a = document.getElementById(id);
+        a.setAttribute('href', '/' + seg + a.getAttribute('href'));
+      });
+    })();
+  </script>
+</body>
+</html>
