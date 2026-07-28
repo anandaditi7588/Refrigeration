@@ -21,6 +21,8 @@ completeness, but each is more work for a worse result on a static site.
 | `sitemap.xml` | The three public pages, for Search Console |
 | `manifest.webmanifest` | Makes the site installable as an app on phones and desktops |
 | `assets/img/icon.svg` | The icon that manifest points at |
+| `assets/img/og-cover.png` | The 1200×630 card shown when the link is shared |
+| `tools/set-domain.js` | Points canonical, og, sitemap and robots at one domain |
 
 `saved.html` and `setup.html` carry `<meta name="robots" content="noindex">`.
 That is deliberate — one shows your own saved recipes, the other is the API-key
@@ -77,19 +79,23 @@ Hosting URL: https://YOUR-PROJECT.web.app
 
 The site is also reachable at `https://YOUR-PROJECT.firebaseapp.com`.
 
-### 5. Put the real domain in robots.txt and sitemap.xml
+### 5. Point the site at its new address
 
-Both ship with a `YOUR-SITE.web.app` placeholder. One command fixes both:
+The site states its own URL in six places, and they all have to agree. One
+command sets them:
 
 ```bash
-sed -i 's|YOUR-SITE.web.app|YOUR-PROJECT.web.app|g' robots.txt sitemap.xml
+node tools/set-domain.js YOUR-PROJECT.web.app
 firebase deploy --only hosting
 ```
 
-On macOS use `sed -i ''` instead of `sed -i`.
+Ideally run this *before* step 4, so the first deploy is already correct.
 
 Then submit the sitemap at <https://search.google.com/search-console> →
 Sitemaps → `sitemap.xml`. That is what gets the site into Google results.
+
+If you are going straight to a `.com`, skip the `web.app` address and use the
+domain instead — see the next section.
 
 ### Trying a change before it goes live
 
@@ -107,15 +113,81 @@ previous release → **Rollback**. Instant, and no redeploy needed.
 
 ---
 
-## Using your own domain
+## Using your own `.com` domain
 
-Firebase console → Hosting → **Add custom domain**. It asks you to prove you own
-the domain with a TXT record, then gives you two A records to add at your
-registrar. The certificate is issued automatically and takes anywhere from a few
-minutes to a day.
+### 1. Buy the domain
 
-If you buy the domain through Google Domains / Squarespace Domains, the DNS
-records go in that registrar's DNS panel — Firebase shows the exact values.
+This is the one step nobody can do for you — it needs your card and your name
+on the registration. A `.com` costs roughly **US $10–15 (₹900–1,400) a year**.
+
+Any registrar works; Firebase only ever needs DNS records, so who sells you the
+name does not affect the site. Note that Google no longer runs a consumer
+registrar — Google Domains was sold to Squarespace — so "buy it from Google" is
+not an option in the way it once was. Cloudflare, Namecheap, Porkbun, GoDaddy
+and BigRock are all fine. Prefer one that includes free WHOIS privacy, or your
+home address ends up in a public database.
+
+Two things worth paying attention to when you pick a name:
+
+- **Check the renewal price, not the first-year price.** A ₹99 first year that
+  renews at ₹1,800 is common.
+- **Say it out loud.** Hyphens and creative spellings cost you every time you
+  tell someone the address.
+
+### 2. Point the site at it — one command
+
+```bash
+cd ai-food-recipes
+node tools/set-domain.js yourdomain.com
+```
+
+Do this **before** the deploy. A website has to state its own address in six
+places — canonical link, `og:url`, `og:image`, `sitemap.xml`, `robots.txt` and
+the structured data — and they all have to agree, or Google merges your pages
+under the wrong URL and shared links preview as a blank box. The script writes
+all six and prints what it changed. Re-run it any time the domain changes; it
+replaces rather than appends.
+
+The site currently points at the GitHub Pages URL, because that is where it is
+actually live today. Running the command above moves it.
+
+### 3. Attach the domain in Firebase
+
+Firebase console → Hosting → **Add custom domain** → type `yourdomain.com`.
+
+Firebase then asks for two things, in order:
+
+1. **A TXT record** to prove you own the domain. Copy the value it shows into
+   your registrar's DNS panel.
+2. **Two A records** once ownership is confirmed. Use the exact values the
+   console gives you — do not copy IPs from a blog post, they change.
+
+Add **both** `yourdomain.com` and `www.yourdomain.com` in Firebase, and set one
+to redirect to the other so there is a single real address. Which one is the
+"real" one is your call; whichever you choose must be the one you passed to
+`set-domain.js`.
+
+DNS changes take anywhere from a few minutes to a few hours to spread. Firebase
+then issues the HTTPS certificate automatically, which can take up to 24 hours.
+Until it is issued the domain may show a certificate warning — that is expected
+and resolves itself.
+
+### 4. Redeploy and tell Google
+
+```bash
+firebase deploy --only hosting
+```
+
+Then at <https://search.google.com/search-console>, add the domain as a property
+and submit `https://yourdomain.com/sitemap.xml`. Indexing takes days to weeks —
+there is no way to speed it up beyond having the sitemap in place.
+
+### About the old URLs
+
+The GitHub Pages copy keeps working after the move. The canonical tags tell
+Google the `.com` is the real one, so it will not be treated as duplicate
+content. If you would rather have only one live copy, turn off Pages in the
+repository settings.
 
 ---
 

@@ -1,7 +1,5 @@
 # AI Food Recipes
 #
-# Replace the Sitemap host below with your real domain after the first deploy.
-# The DEPLOY-GOOGLE.md guide has a one-line sed command that does it.
 
 User-agent: *
 Allow: /
@@ -10,4 +8,4 @@ Allow: /
 Disallow: /saved.html
 Disallow: /setup.html
 
-Sitemap: https://YOUR-SITE.web.app/sitemap.xml
+Sitemap: https://anandaditi7588.github.io/Refrigeration/sitemap.xml
