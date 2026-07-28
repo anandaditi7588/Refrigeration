@@ -114,6 +114,9 @@
     const frag = document.createDocumentFragment();
     AFR.data.catalog.categories.forEach((cat) => frag.appendChild(AFR.components.recipeCard.tile(cat)));
     host.appendChild(frag);
+    /* Tiles carry data-reveal, which starts them at opacity 0. Without this
+       they stay invisible for good — still clickable, but never drawn. */
+    UI.initReveal(host);
   }
 
   /* ------------------------------------------------------------ sections */

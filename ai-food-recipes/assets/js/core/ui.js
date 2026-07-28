@@ -164,8 +164,15 @@
 
     /* ------------------------------------------------------ scroll reveal */
 
+    /**
+     * `[data-reveal]` starts at opacity 0 and is faded in once it scrolls into
+     * view. That makes the CSS default *invisible*, so anything rendered after
+     * boot that never reaches an observer stays invisible for good — still
+     * laid out, still clickable, just never drawn. Whoever renders such content
+     * must call this; `sweepReveal` below is the net for when they forget.
+     */
     initReveal(root = document) {
-      const nodes = UI.qsa('[data-reveal]:not([data-revealed])', root);
+      const nodes = UI.qsa('[data-reveal]:not([data-revealed]):not([data-reveal-watched])', root);
       if (!nodes.length) return;
       if (!('IntersectionObserver' in global)) {
         nodes.forEach((n) => n.setAttribute('data-revealed', 'true'));
@@ -178,8 +185,19 @@
           io.unobserve(entry.target);
         });
       }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-      nodes.forEach((n) => io.observe(n));
+      nodes.forEach((n) => {
+        /* Marked so a later sweep does not stack a second observer on it. */
+        n.setAttribute('data-reveal-watched', '');
+        io.observe(n);
+      });
     },
+
+    /**
+     * Catch anything a page rendered without calling initReveal. Cheap: after
+     * the first pass every node carries data-reveal-watched, so the selector
+     * matches nothing and this returns immediately.
+     */
+    sweepReveal() { UI.initReveal(document); },
 
     /* ------------------------------------------------------- sticky nav */
 
@@ -303,4 +321,11 @@
     const year = UI.qs('[data-year]');
     if (year) year.textContent = String(new Date().getFullYear());
   });
+
+  /* This listener is registered before any page script's, so it also runs
+     first — before the page has rendered its own [data-reveal] content. Sweep
+     again once everything has had its turn, so a page that forgets to call
+     initReveal loses the animation rather than the content. */
+  global.addEventListener('load', () => UI.sweepReveal());
+  document.addEventListener('DOMContentLoaded', () => setTimeout(UI.sweepReveal, 0));
 })(window);
