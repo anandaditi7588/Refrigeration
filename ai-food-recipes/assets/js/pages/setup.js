@@ -338,30 +338,51 @@
 
   /* ------------------------------------------------------------------ boot */
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const host = UI.qs('[data-setup="tests"]');
-    if (!host) return;
-
-    applyKeys();
-    TESTS.forEach((test) => host.appendChild(card(test)));
-
-    /* Show what the app is currently configured to use. */
-    const summary = UI.qs('[data-setup="current"]');
-    if (summary) {
-      const rows = [
-        ['Recipe text', AFR.config.providers.ai],
-        ['Videos', AFR.config.providers.video],
-        ['Photos', AFR.config.providers.photo],
-        ['Ingredient photos', AFR.config.providers.ingredientPhoto],
-        ['Recipe references', AFR.config.providers.recipe],
-      ];
-      summary.innerHTML = rows.map(([label, value]) => `
-        <div class="afr-stat" style="text-align:left">
-          <span>${U.esc(label)}</span>
-          <strong style="font-family:var(--afr-font-body);font-size:.95rem">
-            ${U.esc(value)}${value === 'local' ? ' <span style="font-weight:400;color:var(--afr-text-muted)">(offline)</span>' : ''}
-          </strong>
-        </div>`).join('');
+  /** Describe the AI capability in words rather than a provider id. */
+  function aiLabel() {
+    const conn = AFR.llm && AFR.llm.connection();
+    if (AFR.config.providers.ai === 'universal' && conn) {
+      const spec = AFR.data.llmProviders.resolve(conn);
+      return `${spec.name.split(' — ')[0]} / ${spec.model}`;
     }
+    return AFR.config.providers.ai;
+  }
+
+  function renderCurrent() {
+    const summary = UI.qs('[data-setup="current"]');
+    if (!summary) return;
+
+    const rows = [
+      ['Recipe text', aiLabel()],
+      ['Videos', AFR.config.providers.video],
+      ['Photos', AFR.config.providers.photo],
+      ['Ingredient photos', AFR.config.providers.ingredientPhoto],
+      ['Recipe references', AFR.config.providers.recipe],
+    ];
+    summary.innerHTML = rows.map(([label, value]) => `
+      <div class="afr-stat" style="text-align:left">
+        <span>${U.esc(label)}</span>
+        <strong style="font-family:var(--afr-font-body);font-size:.95rem">
+          ${U.esc(value)}${value === 'local' ? ' <span style="font-weight:400;color:var(--afr-text-muted)">(offline)</span>' : ''}
+        </strong>
+      </div>`).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    applyKeys();
+
+    /* The connector goes in first: it is the change that matters most, and
+       everything below it is a per-service detail. */
+    const llmHost = UI.qs('[data-setup="llm"]');
+    if (llmHost && AFR.components && AFR.components.llmConnect) {
+      AFR.components.llmConnect.render(llmHost);
+    }
+
+    const host = UI.qs('[data-setup="tests"]');
+    if (host) TESTS.forEach((test) => host.appendChild(card(test)));
+
+    renderCurrent();
+    /* Connecting or disconnecting a model changes the summary above. */
+    document.addEventListener('afr:llmchange', renderCurrent);
   });
 })(window);

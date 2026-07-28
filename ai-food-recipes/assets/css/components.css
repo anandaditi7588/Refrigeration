@@ -919,3 +919,50 @@ img[loading="lazy"] { background: var(--afr-bg-alt); }
 [dir="rtl"] .afr-toasts { right: auto; left: 16px; }
 [dir="rtl"] .afr-note { border-left: 0; border-right: 3px solid currentColor; }
 @media (max-width: 560px) { [dir="rtl"] .afr-step { padding-right: 0; } }
+
+/* ---- Bring-your-own-model panel (Live Data) ---------------------------- */
+.afr-llm__grid {
+  display: grid; gap: var(--afr-space-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  margin-top: var(--afr-space-4);
+}
+/* Scoped to the panel on purpose: .afr-field is shared with the wizard and the
+   key cards, and they want the stacked block layout they already have. */
+.afr-llm__grid .afr-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; margin-bottom: 0; }
+.afr-llm__grid .afr-field > span { font-size: .82rem; font-weight: 700; color: var(--afr-text-muted); margin-bottom: 0; }
+.afr-llm__model { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.afr-llm__model select { flex: 1; min-width: 0; }
+.afr-llm__note { font-size: .88rem; color: var(--afr-text-muted); margin: var(--afr-space-4) 0 0; }
+
+.afr-llm__out {
+  margin-top: var(--afr-space-4); padding: 14px 16px;
+  border-radius: var(--afr-radius); border: 1px solid var(--afr-border);
+  background: var(--afr-bg-alt); font-size: .84rem; line-height: 1.55;
+  white-space: pre-wrap; word-break: break-word; max-height: 340px; overflow: auto;
+}
+.afr-llm__out--ok   { border-color: rgba(60, 150, 90, .5);  background: rgba(60, 150, 90, .08); }
+.afr-llm__out--warn { border-color: rgba(217, 147, 33, .5); background: rgba(217, 147, 33, .08); }
+.afr-llm__out--err  { border-color: rgba(200, 60, 45, .5);  background: rgba(200, 60, 45, .08); }
+
+/* ---- About page -------------------------------------------------------- */
+.afr-about__head { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+.afr-about__avatar {
+  flex: 0 0 auto; width: 68px; height: 68px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--afr-font-display); font-size: 1.5rem; font-weight: 700;
+  color: #fff; background: linear-gradient(135deg, var(--afr-brand-500), var(--afr-brand-700));
+  box-shadow: 0 4px 12px rgba(226, 103, 15, 0.35);
+}
+.afr-about__tagline { margin: 4px 0 0; color: var(--afr-text-muted); font-size: 1rem; }
+.afr-about__facts {
+  list-style: none; padding: 0; margin: 10px 0 0;
+  display: flex; flex-wrap: wrap; gap: 8px 18px;
+  font-size: .9rem; color: var(--afr-text-muted);
+}
+.afr-about__facts i { margin-right: 6px; color: var(--afr-brand-500); }
+.afr-about__links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.afr-about__h2 { font-size: 1.15rem; margin: 28px 0 12px; }
+.afr-about__built { list-style: none; padding: 0; margin: 0 0 26px; display: grid; gap: 8px; }
+.afr-about__built li { color: var(--afr-text-muted); font-size: .94rem; }
+.afr-about__built i { color: var(--afr-accent-500); margin-right: 8px; }
+.afr-about__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }

@@ -26,6 +26,7 @@
       'nav.regional': 'Regional',
       'nav.create': 'Create a Dish',
       'nav.saved': 'Saved',
+      'nav.about': 'About',
       'nav.setup': 'Live Data',
       'nav.language': 'Language',
       'nav.chooseLanguage': 'Choose your language',

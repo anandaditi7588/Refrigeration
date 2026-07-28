@@ -36,6 +36,7 @@
         <a class="afr-nav__link" href="index.html">Home</a>
         <a class="afr-nav__link" href="create.html#wizard">Create a Dish</a>
         <a class="afr-nav__link" href="saved.html">Saved</a>
+        <a class="afr-nav__link" href="about.html" data-i18n="nav.about">About</a>
         <a class="afr-nav__link" href="setup.html">Connect Live Data</a>
       </nav>
       <div class="afr-nav__actions">
@@ -64,6 +65,9 @@
               switch on real YouTube results and real photography.</p>
           </div>
         </div>
+
+        <!-- The main event: bring your own model -->
+        <div id="connect" data-setup="llm" style="margin-bottom:28px"></div>
 
         <!-- What is switched on right now -->
         <h2 style="font-size:1.15rem;margin-bottom:12px">Currently using</h2>
@@ -160,11 +164,13 @@ keys: {
   <script src="assets/js/data/dishes-india.js"></script>
   <script src="assets/js/data/dishes-world.js"></script>
   <script src="assets/js/data/wizard-steps.js"></script>
+  <script src="assets/js/data/llm-providers.js"></script>
   <script src="assets/js/services/nutrition-service.js"></script>
   <script src="assets/js/services/prompt-builder.js"></script>
   <script src="assets/js/providers/recipe-schema.js"></script>
   <script src="assets/js/providers/ai-local.js"></script>
   <script src="assets/js/providers/ai-remote.js"></script>
+  <script src="assets/js/providers/ai-universal.js"></script>
   <script src="assets/js/providers/video-providers.js"></script>
   <script src="assets/js/providers/photo-providers.js"></script>
   <script src="assets/js/providers/recipe-api-providers.js"></script>
@@ -173,6 +179,7 @@ keys: {
   <script src="assets/js/services/translation-service.js"></script>
   <script src="assets/js/services/ui-translator.js"></script>
   <script src="assets/js/components/language-picker.js"></script>
+  <script src="assets/js/components/llm-connect.js"></script>
   <script src="assets/js/pages/setup.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 </body>

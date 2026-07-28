@@ -348,6 +348,11 @@
   Object.assign(AFR.providers, {
     aiOpenai: openai, aiGemini: gemini, aiClaude: claude, aiProxy: proxy,
     aiOpenModel: openModel,
+    /* Shared with ai-universal.js so the response handling — JSON
+       extraction, image filling, the nutrition cross-check — lives in
+       exactly one place regardless of which host answered. */
+    _hydrate: hydrate,
+    _extractJSON: extractJSON,
   });
   AFR.providers._aiHelpers = { extractJSON, hydrate };
 })(window);

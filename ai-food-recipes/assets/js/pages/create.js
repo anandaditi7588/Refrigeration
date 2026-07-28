@@ -154,7 +154,7 @@
           It is not in the offline collection, so the engine
           ${unknown.speculative ? 'fell back to a generic' : 'composed one from a'}
           ${U.esc(unknown.technique)} in the ${U.esc(unknown.cuisine)} style.
-          Connect a free AI model on the <a href="setup.html">Live Data</a> page to get the
+          Connect a free AI model on the <a href="setup.html#connect">Live Data</a> page to get the
           real recipe for any dish.</span>
       </div>` : '';
 

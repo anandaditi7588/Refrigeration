@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fbf7f2">
 
-  <title>Saved Recipes — AI Food Recipes</title>
-  <meta name="description" content="Your bookmarked recipes, stored privately in your own browser.">
-  <link rel="canonical" href="./saved.html">
-  <meta name="robots" content="noindex">
+  <title>About &#8212; AI Food Recipes</title>
+  <meta name="description" content="Who built AI Food Recipes, what the app does, and how it is put together.">
+  <link rel="canonical" href="./about.html">
 
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔖</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128278;</text></svg>">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,7 +36,7 @@
         <a class="afr-nav__link" href="index.html#categories">Categories</a>
         <a class="afr-nav__link" href="create.html#wizard">Create a Dish</a>
         <a class="afr-nav__link" href="saved.html">Saved</a>
-        <a class="afr-nav__link" href="about.html" data-i18n="nav.about">About</a>
+        <a class="afr-nav__link" href="about.html" aria-current="page" data-i18n="nav.about">About</a>
         <a class="afr-nav__link" href="setup.html">Live Data</a>
       </nav>
       <div class="afr-nav__actions">
@@ -61,31 +60,21 @@
       <div class="afr-shell">
         <div class="afr-section-head">
           <div>
-            <p class="afr-eyebrow"><i class="fa-solid fa-bookmark" aria-hidden="true"></i> Your collection</p>
-            <h1>Saved Recipes</h1>
-            <p data-saved="count">Nothing saved yet</p>
+            <p class="afr-eyebrow"><i class="fa-solid fa-user" aria-hidden="true"></i> About</p>
+            <h1 data-about="title">About</h1>
           </div>
-          <div data-saved="actions" hidden>
-            <button class="afr-btn afr-btn--ghost afr-btn--sm" type="button" data-saved="clear">
-              <i class="fa-solid fa-trash" aria-hidden="true"></i> Clear all
-            </button>
-          </div>
+          <a class="afr-btn afr-btn--ghost afr-btn--sm" href="index.html">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to browsing
+          </a>
         </div>
-
-        <div class="afr-banner">
-          <i class="fa-solid fa-lock" aria-hidden="true"></i>
-          <span>Saved recipes live in this browser's local storage only. They are never uploaded,
-            and clearing your browser data will remove them.</span>
-        </div>
-
-        <div class="afr-grid afr-grid--wide" data-saved="list"></div>
+        <div data-about="body"></div>
       </div>
     </section>
   </main>
 
   <footer class="afr-footer">
     <div class="afr-shell afr-footer__bottom" style="border-top:0">
-      <span>© <span data-year>2026</span> AI Food Recipes.</span>
+      <span>&#169; <span data-year>2026</span> AI Food Recipes.</span>
       <span><a href="index.html">Back to home</a></span>
     </div>
   </footer>
@@ -96,19 +85,12 @@
   <script src="assets/js/core/ui.js"></script>
   <script src="assets/js/data/languages.js"></script>
   <script src="assets/js/core/i18n.js"></script>
-  <script src="assets/js/providers/photo-providers.js"></script>
-  <script src="assets/js/services/produce-art.js"></script>
-  <script src="assets/js/services/image-service.js"></script>
-  <script src="assets/js/services/card-photos.js"></script>
-  <script src="assets/js/data/ingredients.js"></script>
-  <script src="assets/js/data/cuisines.js"></script>
-  <script src="assets/js/data/catalog.js"></script>
-  <script src="assets/js/components/recipe-card.js"></script>
   <script src="assets/js/providers/translate-providers.js"></script>
   <script src="assets/js/services/translation-service.js"></script>
   <script src="assets/js/services/ui-translator.js"></script>
   <script src="assets/js/components/language-picker.js"></script>
-  <script src="assets/js/pages/saved.js"></script>
+  <script src="assets/js/data/about.js"></script>
+  <script src="assets/js/pages/about.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 </body>
 </html>
