@@ -540,7 +540,7 @@
           + `is how spices burn. `
           + `Set a bowl for scraps beside the board so you are not clearing space with wet hands. `
           + `Everything from here assumes you can reach what you need without looking for it.`,
-        min: 6,
+        min: 6, noCraft: true,
         tips: ['Professional kitchens call this mise en place. It is the single habit that most '
           + 'separates a calm cook from a rushed one, and it costs five minutes.'],
         mistakes: ['Starting to cook while still chopping — by the time you catch up, the first '
@@ -563,7 +563,7 @@
           + `to absorb the change. Add the garnish `
           + `only just before it goes out, so it still looks alive rather than wilted, and serve in `
           + `warmed bowls if the dish is one that cools fast.`,
-        min: 5, temp: 'Off heat', flame: 'Off',
+        min: 5, temp: 'Off heat', flame: 'Off', noCraft: true,
         tips: ['A dish that tastes "not quite right" almost always needs salt or acid, not more spice.'],
         mistakes: ['Serving straight from the heat without tasting — the one habit that separates '
           + 'good home cooks from frustrated ones.'],
@@ -586,6 +586,24 @@
       warnings.push(timeNote);
     }
 
+    /* Add the craft to every step: the knowledge base says what to do, and
+       step-craft.js says how you know it is working. Applied here rather than
+       written into 400 individual steps, because the technique is the same
+       across dishes even when the dish is not. */
+    const usedCraft = Object.create(null);
+    const craft = (s) => {
+      if (!AFR.data.stepCraft) return s;
+      const action = AFR.data.stepCraft.classify(s);
+      const repeat = Boolean(action && usedCraft[action.id]);
+      const grown = AFR.data.stepCraft.expand(s, c, { repeat });
+      if (action) usedCraft[action.id] = true;
+      return grown ? Object.assign({}, s, grown) : s;
+    };
+    /* Preparation first, so an action explained during prep is not explained
+       again during cooking — the counter is shared across both lists. */
+    prepList = prepList.map((s) => craft(Object.assign({ phase: 'prep' }, s)));
+    cookRaw = cookRaw.map((s) => craft(Object.assign({ phase: 'cook' }, s)));
+
     const preparation = prepList.map((s, i) => ({
       n: i + 1,
       title: s.title,
@@ -607,8 +625,12 @@
       mistakes: s.mistakes,
     }));
 
-    /* Beginners get an explicit final check they can trust. */
-    if (c.experience === 'beginner') {
+    /* Beginners used to get an extra taste-check step here. Every recipe now
+       ends with one — see the finishing step added above, and the serving
+       craft in step-craft.js — so adding another produced the same advice
+       twice in a row. Kept only when the finish did not end up covering it. */
+    const alreadyTastes = cookRaw.some((s) => /taste/i.test(`${s.title} ${s.desc}`));
+    if (c.experience === 'beginner' && !alreadyTastes) {
       steps.push({
         n: steps.length + 1,
         title: 'Final check before serving',
