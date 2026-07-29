@@ -114,6 +114,13 @@
     sourcePriority: ['video', 'website', 'recipeApi', 'ai'],
 
     generation: {
+      /* A full 20-section recipe with detailed steps is a large JSON document.
+         Left unset, several OpenAI-compatible hosts default to 1024 or 4096
+         output tokens, which cuts the JSON mid-array — the parse then fails and
+         the app quietly falls back to the offline engine, which reads to a user
+         as "the model gave me short, incomplete steps". Set it high enough that
+         a long recipe is never the reason. */
+      maxTokens: 16000,
       timeoutMs: 25000,        // per-provider ceiling before we fall through
       translateTimeoutMs: 30000, // ceiling on translating a finished recipe
       maxVideos: 6,

@@ -483,7 +483,7 @@
   }
 
   function buildSteps(c, warnings) {
-    const prepRaw = (c.technique.prep(c) || []).filter(Boolean);
+    let prepRaw = (c.technique.prep(c) || []).filter(Boolean);
     let cookRaw = (c.technique.cook(c) || []).filter(Boolean);
 
     /* Appliance rewrites — the method genuinely changes with the kit. */
@@ -511,6 +511,63 @@
         tips: s.tips.concat(['Water-sautéing gives you softness rather than browning, so lean on spices and acid for depth.']),
       }) : s));
       warnings.push('Oil-free mode: sautéing steps use water or stock instead of fat.');
+    }
+
+    /* ------------------------------------------------------------------
+       Make the method run end to end.
+
+       Every recipe really begins with reading it through and getting the
+       ingredients out, and really ends with resting, tasting and plating —
+       but those stages get left out of written recipes almost universally,
+       which is exactly what makes a method feel like it starts and stops
+       mid-air. The dish-specific steps below are written per dish; these two
+       are true of every dish, so they are added here rather than repeated
+       fifty-six times. Only added when the dish has not already covered them,
+       so a recipe that opens with its own mise en place is left alone.
+       ------------------------------------------------------------------ */
+    const opensWithMiseEnPlace = prepRaw.length
+      && /gather|measure|mise|assemble|read|weigh|lay out/i.test(prepRaw[0].title + ' ' + prepRaw[0].desc);
+    if (!opensWithMiseEnPlace) {
+      const named = [c.protein && c.protein.name, c.base && c.base.name, 'onion', 'garlic']
+        .filter(Boolean).map((n) => String(n).toLowerCase()).slice(0, 3);
+      prepRaw = [{
+        title: 'Read it through and get everything out',
+        desc: `Read the whole method before you start — this dish moves quickly once the pan is hot, `
+          + `and the commonest reason a home cook ends up flustered is discovering a step mid-cook. `
+          + `Weigh and lay out everything you need${named.length ? `, starting with the ${named.join(', ')}` : ''}. `
+          + `Measure the spices into one small bowl or saucer rather than reaching for jars `
+          + `over a hot pan: they usually go in within seconds of each other, and that fumbling `
+          + `is how spices burn. `
+          + `Set a bowl for scraps beside the board so you are not clearing space with wet hands. `
+          + `Everything from here assumes you can reach what you need without looking for it.`,
+        min: 6,
+        tips: ['Professional kitchens call this mise en place. It is the single habit that most '
+          + 'separates a calm cook from a rushed one, and it costs five minutes.'],
+        mistakes: ['Starting to cook while still chopping — by the time you catch up, the first '
+          + 'thing in the pan has overcooked.'],
+      }].concat(prepRaw);
+    }
+
+    const endsAtTheTable = cookRaw.length
+      && /serve|plate|rest|garnish|finish|table/i.test(
+        cookRaw[cookRaw.length - 1].title + ' ' + cookRaw[cookRaw.length - 1].desc);
+    if (!endsAtTheTable) {
+      cookRaw = cookRaw.concat([{
+        title: 'Rest, taste and bring it to the table',
+        desc: `Take it off the heat and let it sit for 3 to 5 minutes. This is not idle time: `
+          + `heat keeps moving through the food after the pan is off, and the flavours that taste `
+          + `sharp and separate at the stove settle into each other as it cools slightly. `
+          + `Now taste it properly, with a clean spoon, on its own rather than with rice or bread. `
+          + `Ask three things — does it need salt, does it need acid (a squeeze of lemon or a splash `
+          + `of vinegar), and is the texture where you want it? Adjust while it is still hot enough `
+          + `to absorb the change. Add the garnish `
+          + `only just before it goes out, so it still looks alive rather than wilted, and serve in `
+          + `warmed bowls if the dish is one that cools fast.`,
+        min: 5, temp: 'Off heat', flame: 'Off',
+        tips: ['A dish that tastes "not quite right" almost always needs salt or acid, not more spice.'],
+        mistakes: ['Serving straight from the heat without tasting — the one habit that separates '
+          + 'good home cooks from frustrated ones.'],
+      }]);
     }
 
     /* Compress the method if the user is short on time. Prep gets cut hardest

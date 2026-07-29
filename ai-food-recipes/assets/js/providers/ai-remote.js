@@ -177,6 +177,7 @@
         body: JSON.stringify({
           model: AFR.config.models.openai,
           temperature: 0.7,
+          max_tokens: AFR.config.generation.maxTokens,
           response_format: { type: 'json_object' },
           messages: [
             { role: 'system', content: AFR.prompt.SYSTEM },
@@ -238,6 +239,7 @@
         body: JSON.stringify({
           model: AFR.config.openModel.model,
           temperature: 0.7,
+          max_tokens: AFR.config.generation.maxTokens,
           /* Not every open model honours json_object, so the prompt also
              demands raw JSON and extractJSON() copes with fenced output. */
           response_format: { type: 'json_object' },
@@ -305,8 +307,9 @@
         },
         body: JSON.stringify({
           model: AFR.config.models.claude,
-          max_tokens: 8000,
+          max_tokens: AFR.config.generation.maxTokens,
           temperature: 0.7,
+          max_tokens: AFR.config.generation.maxTokens,
           system: AFR.prompt.SYSTEM,
           messages: [{ role: 'user', content: AFR.prompt.build(answers) }],
         }),

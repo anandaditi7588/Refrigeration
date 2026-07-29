@@ -76,6 +76,7 @@
           body: JSON.stringify({
             model: spec.model,
             temperature: 0.7,
+            max_tokens: AFR.config.generation.maxTokens,
             /* Not every open model honours this, so the prompt demands raw
                JSON too and extractJSON copes with fenced output. */
             response_format: { type: 'json_object' },
@@ -83,7 +84,14 @@
           }),
         }, spec.name);
 
-        return data.choices && data.choices[0] && data.choices[0].message.content;
+        const choice = data.choices && data.choices[0];
+        /* Say so plainly. Truncated JSON otherwise surfaces as an opaque parse
+           error and a silent fall back to the offline engine. */
+        if (choice && choice.finish_reason === 'length') {
+          throw new Error('The model ran out of output space before finishing the recipe. '
+            + 'Raise generation.maxTokens, or choose a model with a larger output limit.');
+        }
+        return choice && choice.message.content;
       },
 
       async models(spec) {
@@ -109,12 +117,16 @@
           },
           body: JSON.stringify({
             model: spec.model,
-            max_tokens: 8000,
+            max_tokens: AFR.config.generation.maxTokens,
             system,
             messages: [{ role: 'user', content: user }],
           }),
         }, spec.name);
 
+        if (data.stop_reason === 'max_tokens') {
+          throw new Error('The model ran out of output space before finishing the recipe. '
+            + 'Raise generation.maxTokens, or choose a model with a larger output limit.');
+        }
         return (data.content || []).map((part) => part.text || '').join('');
       },
 
@@ -141,12 +153,20 @@
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: system }] },
             contents: [{ role: 'user', parts: [{ text: user }] }],
-            generationConfig: { temperature: 0.7, responseMimeType: 'application/json' },
+            generationConfig: {
+              temperature: 0.7,
+              responseMimeType: 'application/json',
+              maxOutputTokens: AFR.config.generation.maxTokens,
+            },
           }),
         }, spec.name);
 
-        return data.candidates && data.candidates[0]
-          && data.candidates[0].content.parts.map((p) => p.text).join('');
+        const candidate = data.candidates && data.candidates[0];
+        if (candidate && candidate.finishReason === 'MAX_TOKENS') {
+          throw new Error('The model ran out of output space before finishing the recipe. '
+            + 'Raise generation.maxTokens, or choose a model with a larger output limit.');
+        }
+        return candidate && candidate.content.parts.map((p) => p.text).join('');
       },
 
       async models(spec) {

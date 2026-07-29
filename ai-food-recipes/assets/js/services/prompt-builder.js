@@ -38,6 +38,51 @@
   "safety": { "temps": string[], "storage": string[], "crossContamination": string[], "expiry": string[] }
 }`;
 
+  /**
+   * The part of the prompt that decides whether someone can actually cook from
+   * the result.
+   *
+   * Without this a model writes "Add spices and cook until done" — technically
+   * a step, useless in a kitchen. The rules below are deliberately blunt about
+   * the two failure modes: skipping stages (the recipe jumps from mixing to
+   * serving) and compressing several actions into one line. Length is not the
+   * goal, completeness is; but completeness here does mean long, so the prompt
+   * says so outright rather than leaving the model to guess at a house style.
+   */
+  const STEP_RULES = [
+    'PREPARATION AND COOKING STEPS — the most important part of your answer:',
+    '',
+    'Write the recipe END TO END. Someone who has never made this dish must be able',
+    'to cook it from your steps alone, without looking anything up. A long answer is',
+    'expected and welcome. Never abbreviate, never summarise, never write "etc.",',
+    '"and so on", "as needed", "cook until done" or "prepare the remaining ingredients".',
+    '',
+    'Cover every stage that really happens, including the ones recipes usually omit:',
+    'soaking, marinating, resting, proving, preheating, tempering, cooling, straining,',
+    'resting after cooking, final seasoning adjustment, garnishing and plating.',
+    'If a stage involves waiting, say what to do during the wait.',
+    '',
+    'PREPARATION: 5 to 10 steps. Each one covers ONE task, and states exactly how the',
+    'ingredient should end up — the cut and its size in mm or cm, the texture, the',
+    'temperature, the quantity being handled. "Finely chop the onion" is not enough;',
+    '"Halve the onion pole to pole and slice into 2-3 mm half-moons, about 1 cup" is.',
+    '',
+    'COOKING: 8 to 15 steps. Each step must give, in its desc:',
+    '  1. The exact action, and the quantity involved restated from the ingredient list',
+    '     so the cook does not have to scroll back.',
+    '  2. The pan or vessel, and the heat level in words.',
+    '  3. How long it takes, as a range.',
+    '  4. WHAT IT SHOULD LOOK, SOUND OR SMELL LIKE when it is ready — the sensory cue is',
+    '     what makes a step reliable across different stoves. "Until the raw smell goes',
+    '     and the oil separates at the edges" beats "until cooked".',
+    '  5. What to do if it is going wrong at that moment.',
+    '',
+    'Write each desc as 3 to 6 full sentences. Aim for 60 words or more per cooking step.',
+    'Also fill temp, flame and minutes for every cooking step, plus at least one tip and',
+    'one common mistake. The final cooking step must be resting, finishing or plating —',
+    'the recipe should end at the table, not at the stove.',
+  ].join('\n');
+
   /** The instruction that makes a hosted model write the whole recipe in the
    *  chosen language. Deliberately explicit about what must NOT be translated:
    *  numbers and units have to stay machine-readable for the nutrition maths. */
@@ -59,7 +104,9 @@
   const SYSTEM = [
     'You are a professional recipe developer who has cooked across many cuisines.',
     'You write precise, testable recipes: real quantities, real temperatures, real timings.',
-    'You never pad with narrative. Every sentence must help someone cook the dish.',
+    'You never pad with narrative, but you are never terse either: every stage of the',
+    'cook is written out in full, because a missing step is what ruins a dish.',
+    'Every sentence must help someone cook it.',
     'You respect dietary restrictions absolutely — an allergy is a hard constraint, never a suggestion.',
     'You scale every quantity to the requested number of servings, scaling spices and fat slightly sub-linearly as a real cook would.',
     'You return ONLY valid JSON matching the given schema. No markdown fences, no commentary.',
@@ -106,12 +153,12 @@
       brief(answers),
       '',
       'Requirements:',
-      '- At least 5 preparation steps and 6 cooking steps.',
       '- Every ingredient needs a quantity, a unit, an approximate weight in grams, its purpose in the dish, a practical substitute and a healthier alternative.',
-      '- Every cooking step needs a temperature, a flame/heat level, a duration, at least one tip and one common mistake.',
       '- Nutrition must be PER SERVING and consistent with the ingredient list you wrote.',
       '- Six variations: Healthy, Restaurant, Quick, Budget, Premium and Festival.',
       '- Food-safety section must include internal cooking temperatures where a protein is involved.',
+      '',
+      STEP_RULES,
       '',
       'Return JSON only, matching this schema exactly:',
       SCHEMA_HINT,
@@ -119,5 +166,5 @@
     ].join('\n');
   }
 
-  AFR.prompt = { SYSTEM, SCHEMA_HINT, brief, build, languageInstruction };
+  AFR.prompt = { SYSTEM, SCHEMA_HINT, STEP_RULES, brief, build, languageInstruction };
 })(window);

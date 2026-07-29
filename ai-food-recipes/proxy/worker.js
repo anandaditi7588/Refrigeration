@@ -45,6 +45,9 @@ const CONFIG = {
   /* A recipe brief is a couple of KB. Anything much larger is not a recipe. */
   maxBodyBytes: 16_000,
 
+  /* Output ceiling. A complete recipe with detailed steps needs the room. */
+  maxTokens: 16_000,
+
   timeoutMs: 45_000,
 };
 
@@ -56,7 +59,9 @@ const CONFIG = {
 const SYSTEM = [
   'You are a professional recipe developer who has cooked across many cuisines.',
   'You write precise, testable recipes: real quantities, real temperatures, real timings.',
-  'You never pad with narrative. Every sentence must help someone cook the dish.',
+  'You never pad with narrative, but you are never terse either: every stage of the',
+  'cook is written out in full, because a missing step is what ruins a dish.',
+  'Every sentence must help someone cook it.',
   'You respect dietary restrictions absolutely — an allergy is a hard constraint, never a suggestion.',
   'You scale every quantity to the requested number of servings, scaling spices and fat',
   'slightly sub-linearly as a real cook would.',
@@ -181,6 +186,10 @@ export default {
         body: JSON.stringify({
           model: env.MODEL || CONFIG.model,
           temperature: 0.7,
+          /* A detailed 20-section recipe is a big document. Without this the
+             host's default cuts the JSON mid-array and the browser sees a
+             parse failure it can do nothing about. */
+          max_tokens: Number(env.MAX_TOKENS) || CONFIG.maxTokens,
           response_format: { type: 'json_object' },
           messages: [
             { role: 'system', content: SYSTEM },
@@ -203,8 +212,15 @@ export default {
       }
 
       const data = await upstream.json();
-      const text = data?.choices?.[0]?.message?.content;
+      const choice = data?.choices?.[0];
+      const text = choice?.message?.content;
       if (!text) return json({ error: 'The model returned nothing.' }, 502, origin);
+      if (choice.finish_reason === 'length') {
+        return json({
+          error: 'The recipe was longer than the model could finish in one go. '
+            + 'Try again, or ask for fewer servings.',
+        }, 502, origin);
+      }
 
       /* Hand back the raw text. The browser already knows how to parse and
          normalise it — the same code path every other adapter uses — so the
