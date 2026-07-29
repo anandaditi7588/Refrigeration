@@ -169,7 +169,7 @@
     async generate(answers, hooks = {}) {
       const key = AFR.config.keys.openai;
       if (!key) throw new Error('No OpenAI key configured (AFR.config.keys.openai)');
-      (hooks.onProgress || (() => {}))('Asking OpenAI for a structured recipe…', 0.4);
+      (hooks.onProgress || (() => {}))('Writing your recipe…', 0.4);
 
       const data = await post('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -225,7 +225,7 @@
       /* A self-hosted Ollama or vLLM needs no key; a hosted service does. */
       if (!key && !custom) throw new Error(`No API key configured for ${label} (AFR.config.keys.openModel)`);
 
-      (hooks.onProgress || (() => {}))(`Asking ${label} for a structured recipe…`, 0.4);
+      (hooks.onProgress || (() => {}))('Writing your recipe…', 0.4);
 
       const headers = { 'Content-Type': 'application/json' };
       if (key) headers.Authorization = `Bearer ${key}`;
@@ -262,7 +262,7 @@
     async generate(answers, hooks = {}) {
       const key = AFR.config.keys.gemini;
       if (!key) throw new Error('No Gemini key configured (AFR.config.keys.gemini)');
-      (hooks.onProgress || (() => {}))('Asking Gemini for a structured recipe…', 0.4);
+      (hooks.onProgress || (() => {}))('Writing your recipe…', 0.4);
 
       const model = AFR.config.models.gemini;
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
@@ -324,20 +324,40 @@
   /* The recommended production path: your server holds the key and decides
      which model to call. It should return either the recipe JSON directly or
      `{ recipe: {...} }`. */
+  /**
+   * The shared-backend path: a small server of yours holds the API key and
+   * forwards to the model, so visitors need no key of their own.
+   *
+   * It is sent the same two messages any other adapter would send, plus the
+   * raw answers so a backend can do its own thing with them. A backend is free
+   * to ignore `system` and use its own — the reference worker in proxy/ does
+   * exactly that, so the endpoint cannot be repurposed as a general-purpose
+   * model proxy by anyone who finds the URL.
+   *
+   * Accepts either { recipe: {...} } or the recipe object directly.
+   */
   const proxy = {
-    id: 'proxy', capability: 'ai', label: 'Your backend',
+    id: 'proxy', capability: 'ai', label: 'Shared model',
     async generate(answers, hooks = {}) {
       const url = AFR.config.endpoints.ai;
       if (!url) throw new Error('No AI endpoint configured (AFR.config.endpoints.ai)');
-      (hooks.onProgress || (() => {}))('Generating your recipe…', 0.4);
+      (hooks.onProgress || (() => {}))('Writing your recipe…', 0.4);
 
       const data = await post(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers, brief: AFR.prompt.brief(answers) }),
+        body: JSON.stringify({
+          answers,
+          brief: AFR.prompt.brief(answers),
+          system: AFR.prompt.SYSTEM,
+          user: AFR.prompt.build(answers),
+        }),
       }, 'Recipe backend');
 
-      const recipe = hydrate(data.recipe || data, answers);
+      /* A backend may return the recipe already parsed, or hand back the
+         model's raw text for the client to parse — support both. */
+      const payload = data.recipe || data.text || data;
+      const recipe = hydrate(typeof payload === 'string' ? extractJSON(payload) : payload, answers);
       recipe.meta.provider = 'proxy';
       recipe.meta.mode = 'ai';
       return recipe;

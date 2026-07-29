@@ -35,9 +35,20 @@
     const saved = AFR.llm.connection() || {};
     const current = saved.provider || 'gemini';
 
+    /* When the site runs its own backend, nobody has to do anything — say so
+       first, or the form below reads as a requirement rather than an option. */
+    const sharedBanner = AFR.llm.shared() ? `
+      <div class="afr-banner afr-banner--strong" style="margin-bottom:18px">
+        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        <span><strong>A model is already connected for everyone.</strong>
+        You do not need a key &mdash; recipes for any dish work right now. Connect your
+        own below only if you want a different model, or if the shared one is busy.</span>
+      </div>` : '';
+
     host.innerHTML = `
       <article class="afr-card afr-llm" style="padding:22px">
         <h3 style="margin-top:0">Connect a model</h3>
+        ${sharedBanner}
         <p style="color:var(--afr-text-muted);font-size:.93rem">
           The built-in engine knows ${AFR.data.dishes ? AFR.data.dishes.count : 'a few dozen'} dishes.
           Connect a model and it answers for <strong>any</strong> dish, in any of the 35 languages,
@@ -219,7 +230,9 @@
     $('clear').addEventListener('click', () => {
       AFR.llm.save(null);
       keyEl.value = '';
-      say('Disconnected. Recipes come from the built-in engine again.', 'info');
+      say(AFR.llm.shared()
+        ? 'Disconnected. Recipes come from the site\'s shared model again.'
+        : 'Disconnected. Recipes come from the built-in engine again.', 'info');
       document.dispatchEvent(new CustomEvent('afr:llmchange'));
     });
 

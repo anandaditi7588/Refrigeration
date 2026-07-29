@@ -148,7 +148,6 @@
           <div class="afr-step__facts">
             ${chip(`${U.humanTime(s.minutes)}`, 'afr-chip--brand')}
           </div>
-          <div class="afr-step__media">${img(s.image, `Step ${s.n}: ${s.title}`)}</div>
           <p style="color:var(--afr-text-muted)">${e(s.desc)}</p>
           ${(s.tips || []).map((t) => note('tip', 'fa-lightbulb', t)).join('')}
           ${(s.mistakes || []).map((m) => note('warn', 'fa-triangle-exclamation', m)).join('')}
@@ -163,7 +162,6 @@
         <li class="afr-step">
           <span class="afr-step__num" aria-hidden="true">${s.n}</span>
           <h4 class="afr-step__title">${e(s.title)}</h4>
-          <div class="afr-step__media">${img(s.image, `Cooking step ${s.n}: ${s.title}`)}</div>
           <div class="afr-step__facts">
             ${chip(`⏱ ${U.humanTime(s.minutes)}`, 'afr-chip--brand')}
             ${s.temp && s.temp !== '—' ? chip(`🌡 ${s.temp}`) : ''}

@@ -161,7 +161,7 @@
     header.innerHTML = `
       ${unknownBanner}
       <p class="afr-eyebrow"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
-        Your custom recipe · ${U.esc(recipe.meta.provider === 'local' ? 'built-in engine' : recipe.meta.provider)}</p>
+        Your custom recipe</p>
       <h1>${U.esc(recipe.name)}</h1>
       <div style="display:flex;flex-wrap:wrap;gap:8px">
         <span class="afr-chip afr-chip--brand">${U.esc(recipe.cuisine.flag)} ${U.esc(recipe.cuisine.name)}</span>

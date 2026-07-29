@@ -37,10 +37,15 @@
     return null;
   }
 
+  /** True when the site owner has configured a shared backend for everyone. */
+  function shared() { return Boolean(AFR.config.endpoints.ai); }
+
   function save(conn) {
     AFR.store.set(STORE_KEY, conn || null);
-    /* Switch the capability on (or off) to match. */
-    AFR.config.providers.ai = conn ? 'universal' : 'local';
+    /* Switch the capability on, or fall back to whatever the site provides —
+       the shared backend if there is one, the offline engine otherwise.
+       Disconnecting should not drop a visitor below the site's own default. */
+    AFR.config.providers.ai = conn ? 'universal' : (shared() ? 'proxy' : 'local');
   }
 
   /* ---------------------------------------------------------------------- */
@@ -184,7 +189,7 @@
       const protocol = PROTOCOLS[spec.protocol];
       if (!protocol) throw new Error(`Unknown protocol "${spec.protocol}".`);
 
-      (hooks.onProgress || (() => {}))(`Asking ${spec.name} for a structured recipe…`, 0.4);
+      (hooks.onProgress || (() => {}))('Writing your recipe…', 0.4);
 
       const text = await protocol.chat(spec, AFR.prompt.SYSTEM, AFR.prompt.build(answers));
       const recipe = AFR.providers._hydrate(AFR.providers._extractJSON(text), answers);
@@ -196,14 +201,17 @@
 
   AFR.providers = AFR.providers || {};
   AFR.providers.aiUniversal = universal;
-  AFR.llm = { connection, save, listModels, STORE_KEY, PROTOCOLS };
+  AFR.llm = { connection, save, listModels, shared, STORE_KEY, PROTOCOLS };
 
   /* A connection saved on the Live Data page has to take effect on every page,
      not just the one where it was entered — otherwise it tests green and the
      wizard carries on using the offline engine. Only claim the slot if it is
      still on the default, so an explicit choice in config.js is respected. */
-  if (AFR.config.providers.ai === 'local'
+  if ((AFR.config.providers.ai === 'local' || AFR.config.providers.ai === 'proxy')
       && AFR.store && AFR.store.get(STORE_KEY, null)) {
+    /* Overrides a shared backend too: someone who went to the trouble of
+       connecting their own model wants theirs, and it spares the shared
+       allowance. */
     AFR.config.providers.ai = 'universal';
   }
 })(window);

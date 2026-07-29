@@ -1,0 +1,13 @@
+# Cloudflare Workers deploy config.
+#
+# The API key is NOT in this file and must never be. It is set once with
+#   wrangler secret put GROQ_API_KEY
+# which stores it encrypted on Cloudflare's side.
+
+name = "ai-food-recipes-model"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+# Safe to commit — not a secret. Change the model without touching code.
+MODEL = "llama-3.3-70b-versatile"

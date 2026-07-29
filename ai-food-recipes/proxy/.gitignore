@@ -1,0 +1,5 @@
+# Belt and braces: nothing key-shaped ever gets committed from this folder.
+.dev.vars
+.env
+*.key
+node_modules/

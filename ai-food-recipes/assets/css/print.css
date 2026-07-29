@@ -75,7 +75,7 @@
   }
 
   img { max-width: 100% !important; }
-  .afr-step__media img, .afr-hero-recipe img { max-height: 62mm; object-fit: cover; }
+  .afr-hero-recipe img { max-height: 62mm; object-fit: cover; }
 
   /* Expose link targets so a printed sheet stays useful. */
   .afr-print-url a::after {

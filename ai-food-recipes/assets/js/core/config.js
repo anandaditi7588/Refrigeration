@@ -217,6 +217,18 @@
     return { applied, enabled };
   };
 
+  /* A shared backend, if one is configured, is the default for everybody.
+     This is the only way to let every visitor use one API key: the key sits on
+     that server, never in this file. Anything written into `keys` above is
+     downloadable by every visitor — it is for local development only.
+
+     A visitor who connects their own model on the Live Data page overrides
+     this (see providers/ai-universal.js); the shared endpoint is the floor,
+     not a ceiling. */
+  if (AFR.config.endpoints.ai && AFR.config.providers.ai === 'local') {
+    AFR.config.providers.ai = 'proxy';
+  }
+
   /* Applied immediately so every page — including the one that generates
      recipes — sees the same configuration. */
   AFR.config.runtime = AFR.config.applyStoredKeys();

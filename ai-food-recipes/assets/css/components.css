@@ -657,8 +657,6 @@
 }
 .afr-step__title { margin-bottom: 6px; font-size: 1.05rem; overflow-wrap: anywhere; }
 .afr-step p, .afr-note span, .afr-card__desc { overflow-wrap: anywhere; }
-.afr-step__media { border-radius: var(--afr-radius); overflow: hidden; margin-bottom: var(--afr-space-3); border: 1px solid var(--afr-border); }
-.afr-step__media img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
 .afr-step__facts { display: flex; flex-wrap: wrap; gap: 8px; margin: var(--afr-space-3) 0; }
 .afr-note {
   display: flex; gap: 10px;
