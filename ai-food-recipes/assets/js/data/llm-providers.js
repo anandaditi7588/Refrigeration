@@ -11,6 +11,12 @@
  * this table. That includes hosts that do not exist yet and anything you run
  * yourself — Ollama, vLLM and LM Studio all speak the openai protocol.
  *
+ * `maxOutputTokens` is the ceiling on what a host will emit in one reply.
+ * Asking for more is not ignored — Gemini and several OpenAI-compatible hosts
+ * reject the whole request with a 400, which surfaces as "connection failed".
+ * The values here are conservative on purpose: too low costs a little detail,
+ * too high costs the entire answer.
+ *
  * `models` is only a starting list. Where a host exposes a models endpoint the
  * setup page fetches the live list with your key, which is always more current
  * than anything hard-coded here.
@@ -23,6 +29,7 @@
   const PROVIDERS = [
     {
       id: 'gemini',
+      maxOutputTokens: 8192,
       name: 'Google Gemini',
       protocol: 'gemini',
       base: 'https://generativelanguage.googleapis.com/v1beta',
@@ -36,6 +43,7 @@
     },
     {
       id: 'groq',
+      maxOutputTokens: 32768,
       name: 'Groq — open models, very fast',
       protocol: 'openai',
       base: 'https://api.groq.com/openai/v1',
@@ -50,6 +58,7 @@
     },
     {
       id: 'openai',
+      maxOutputTokens: 16384,
       name: 'OpenAI',
       protocol: 'openai',
       base: 'https://api.openai.com/v1',
@@ -61,6 +70,7 @@
     },
     {
       id: 'anthropic',
+      maxOutputTokens: 8192,
       name: 'Anthropic Claude',
       protocol: 'anthropic',
       base: 'https://api.anthropic.com/v1',
@@ -77,6 +87,7 @@
     },
     {
       id: 'openrouter',
+      maxOutputTokens: 8192,
       name: 'OpenRouter — one key, hundreds of models',
       protocol: 'openai',
       base: 'https://openrouter.ai/api/v1',
@@ -91,6 +102,7 @@
     },
     {
       id: 'mistral',
+      maxOutputTokens: 8192,
       name: 'Mistral AI',
       protocol: 'openai',
       base: 'https://api.mistral.ai/v1',
@@ -102,6 +114,7 @@
     },
     {
       id: 'together',
+      maxOutputTokens: 8192,
       name: 'Together AI',
       protocol: 'openai',
       base: 'https://api.together.xyz/v1',
@@ -113,6 +126,7 @@
     },
     {
       id: 'deepinfra',
+      maxOutputTokens: 8192,
       name: 'DeepInfra',
       protocol: 'openai',
       base: 'https://api.deepinfra.com/v1/openai',
@@ -124,6 +138,7 @@
     },
     {
       id: 'deepseek',
+      maxOutputTokens: 8192,
       name: 'DeepSeek',
       protocol: 'openai',
       base: 'https://api.deepseek.com/v1',
@@ -135,6 +150,7 @@
     },
     {
       id: 'xai',
+      maxOutputTokens: 16384,
       name: 'xAI Grok',
       protocol: 'openai',
       base: 'https://api.x.ai/v1',
@@ -146,6 +162,7 @@
     },
     {
       id: 'ollama',
+      maxOutputTokens: 8192,
       name: 'Ollama — a model on your own machine',
       protocol: 'openai',
       base: 'http://localhost:11434/v1',
@@ -161,6 +178,7 @@
     },
     {
       id: 'custom',
+      maxOutputTokens: 8192,
       name: 'Custom — any OpenAI-compatible endpoint',
       protocol: 'openai',
       base: '',

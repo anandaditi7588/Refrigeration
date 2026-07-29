@@ -45,10 +45,15 @@ const CONFIG = {
   /* A recipe brief is a couple of KB. Anything much larger is not a recipe. */
   maxBodyBytes: 16_000,
 
-  /* Output ceiling. A complete recipe with detailed steps needs the room. */
+  /* Output ceiling. A complete recipe with detailed steps needs the room, but
+     asking for more than the model can emit is a hard 400, not a clamp — keep
+     this at or below the configured model's real output limit. 32768 is the
+     llama-3.3-70b figure; lower it if you switch to a smaller model. */
   maxTokens: 16_000,
 
-  timeoutMs: 45_000,
+  /* A fully detailed recipe takes a while to write. Too short a timeout here
+     shows up as a failed connection for a request that was still working. */
+  timeoutMs: 75_000,
 };
 
 /* The system prompt is fixed HERE rather than taken from the request. The

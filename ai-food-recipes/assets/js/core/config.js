@@ -121,6 +121,13 @@
          as "the model gave me short, incomplete steps". Set it high enough that
          a long recipe is never the reason. */
       maxTokens: 16000,
+
+      /* Writing a model's answer takes far longer than fetching a photo or a
+         video listing, and asking for a fully detailed method made it longer
+         again. Sharing one timeout with those searches meant a recipe that was
+         still being written got aborted at 25s and reported as a failed
+         connection. AI generation gets its own, generous ceiling. */
+      aiTimeoutMs: 90000,
       timeoutMs: 25000,        // per-provider ceiling before we fall through
       translateTimeoutMs: 30000, // ceiling on translating a finished recipe
       maxVideos: 6,

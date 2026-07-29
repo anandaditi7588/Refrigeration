@@ -134,7 +134,7 @@
         aiProvider.generate(answers, {
           onProgress: (label, fraction) => advance(2, fraction, label),
         }),
-        AFR.config.generation.timeoutMs,
+        AFR.config.generation.aiTimeoutMs,
         'Recipe generation'), warnings);
 
     /* Falling back is a normal outcome, not a crash. */

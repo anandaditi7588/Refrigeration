@@ -154,7 +154,7 @@
 
   /** Shared fetch with timeout and useful error text. */
   async function post(url, options, label) {
-    const res = await U.withTimeout(fetch(url, options), AFR.config.generation.timeoutMs, label);
+    const res = await U.withTimeout(fetch(url, options), AFR.config.generation.aiTimeoutMs, label);
     if (!res.ok) {
       let detail = '';
       try { detail = (await res.text()).slice(0, 300); } catch (_) { /* ignore */ }

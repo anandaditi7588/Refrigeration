@@ -53,13 +53,52 @@
   /* ---------------------------------------------------------------------- */
 
   async function post(url, options, label) {
-    const res = await U.withTimeout(fetch(url, options), AFR.config.generation.timeoutMs, label);
+    const res = await U.withTimeout(fetch(url, options), AFR.config.generation.aiTimeoutMs, label);
     if (!res.ok) {
       let detail = '';
       try { detail = (await res.text()).slice(0, 300); } catch (err) { /* ignore */ }
       throw new Error(`${label} failed: HTTP ${res.status}${detail ? ` — ${detail}` : ''}`);
     }
     return res.json();
+  }
+
+  /**
+   * How many output tokens to ask this host for.
+   *
+   * Requesting more than a model can emit is not clamped by the provider — it
+   * is rejected outright, which reads to a user as the key or the model being
+   * wrong. So take the lower of what the app wants and what the host allows,
+   * and let a connection override it for a model we have no entry for.
+   */
+  function outputCap(spec) {
+    const wanted = AFR.config.generation.maxTokens;
+    const allowed = spec.maxOutputTokens || 8192;
+    return Math.min(wanted, allowed);
+  }
+
+  /** Does this failure look like the host refusing our token ceiling? */
+  function isTokenCapError(err) {
+    const m = String(err && err.message || '');
+    return /max_?_?tokens|maxoutputtokens|max output|output token/i.test(m)
+      && /(exceed|less than|greater than|too large|must be|invalid|400)/i.test(m);
+  }
+
+  /**
+   * The limit the host says it wants, if the error bothered to name one.
+   *
+   * Read the number that follows the phrase stating the limit, rather than
+   * scanning the message for figures. These errors carry at least three:
+   * the limit, the value we sent, and the HTTP status — and "smallest number
+   * present" happily returns 400, which would cap every recipe at 400 tokens
+   * and truncate all of them.
+   */
+  function capFromError(err) {
+    const m = String(err && err.message || '');
+    const stated = m.match(
+      /(?:less than or equal to|at most|no more than|maximum(?: of| is)?|max(?:imum)? value|cannot exceed|<=)\s*:?\s*(\d{3,7})/i);
+    const value = stated ? Number(stated[1]) : 0;
+    /* No host caps output below ~1k; anything smaller is a misread. */
+    return value >= 1024 && value <= 200000 ? value : 0;
   }
 
   const PROTOCOLS = {
@@ -76,7 +115,7 @@
           body: JSON.stringify({
             model: spec.model,
             temperature: 0.7,
-            max_tokens: AFR.config.generation.maxTokens,
+            max_tokens: spec.maxTokens || outputCap(spec),
             /* Not every open model honours this, so the prompt demands raw
                JSON too and extractJSON copes with fenced output. */
             response_format: { type: 'json_object' },
@@ -117,7 +156,7 @@
           },
           body: JSON.stringify({
             model: spec.model,
-            max_tokens: AFR.config.generation.maxTokens,
+            max_tokens: spec.maxTokens || outputCap(spec),
             system,
             messages: [{ role: 'user', content: user }],
           }),
@@ -156,7 +195,7 @@
             generationConfig: {
               temperature: 0.7,
               responseMimeType: 'application/json',
-              maxOutputTokens: AFR.config.generation.maxTokens,
+              maxOutputTokens: spec.maxTokens || outputCap(spec),
             },
           }),
         }, spec.name);
@@ -211,7 +250,20 @@
 
       (hooks.onProgress || (() => {}))('Writing your recipe…', 0.4);
 
-      const text = await protocol.chat(spec, AFR.prompt.SYSTEM, AFR.prompt.build(answers));
+      let text;
+      try {
+        text = await protocol.chat(spec, AFR.prompt.SYSTEM, AFR.prompt.build(answers));
+      } catch (err) {
+        /* The table of per-host ceilings cannot cover a model released after
+           this file was written, so treat the host's own complaint as the
+           authority and go again with what it will accept. Failing outright
+           here is what makes a working key look broken. */
+        if (!isTokenCapError(err)) throw err;
+        const retryCap = capFromError(err) || 4096;
+        text = await protocol.chat(
+          Object.assign({}, spec, { maxTokens: retryCap }),
+          AFR.prompt.SYSTEM, AFR.prompt.build(answers));
+      }
       const recipe = AFR.providers._hydrate(AFR.providers._extractJSON(text), answers);
       recipe.meta.provider = `${spec.id}:${spec.model}`;
       recipe.meta.mode = 'ai';
@@ -221,7 +273,10 @@
 
   AFR.providers = AFR.providers || {};
   AFR.providers.aiUniversal = universal;
-  AFR.llm = { connection, save, listModels, shared, STORE_KEY, PROTOCOLS };
+  AFR.llm = { connection, save, listModels, shared, STORE_KEY, PROTOCOLS,
+    /* Exposed for tests: the error-message parsing is fiddly enough to
+       deserve direct coverage rather than only being exercised end to end. */
+    _capFromError: capFromError, _isTokenCapError: isTokenCapError };
 
   /* A connection saved on the Live Data page has to take effect on every page,
      not just the one where it was entered — otherwise it tests green and the
