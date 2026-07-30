@@ -436,9 +436,10 @@
       const spec = AFR.data.llmProviders.resolve(conn);
       return `${spec.name.split(' — ')[0]} / ${spec.model}`;
     }
-    /* "proxy" is an implementation detail; what a visitor needs to know is
-       that a model is running and it costs them nothing to set up. */
-    if (AFR.config.providers.ai === 'proxy') return 'shared model (no key needed)';
+    /* Just the state, not an advertisement. "proxy" is an implementation
+       detail and "no key needed" was an announcement the site should not be
+       making to its visitors. */
+    if (AFR.config.providers.ai === 'proxy') return 'connected';
     return AFR.config.providers.ai;
   }
 
