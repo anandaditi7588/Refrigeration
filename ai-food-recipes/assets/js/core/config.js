@@ -59,7 +59,12 @@
        secrets and forwards to the vendor. Set a URL here and switch the
        matching entry in `providers` above. */
     endpoints: {
-      ai: '',        // e.g. 'https://api.example.com/ai/recipe'
+      /* The shared backend (see proxy/worker.js and proxy/README.md). Holds
+         the site owner's Groq key server-side, so a visitor gets a real
+         recipe for any dish with no key of their own. Setting this switches
+         providers.ai to 'proxy' automatically for everyone whose own choice
+         is still on the default — see applyStoredKeys() below. */
+      ai: 'https://ai-food-recipes-model.aditianand.workers.dev',
       video: '',     // e.g. 'https://api.example.com/youtube/search'
       recipe: '',    // e.g. 'https://api.example.com/recipes/search'
       translate: '', // e.g. 'https://api.example.com/translate'
