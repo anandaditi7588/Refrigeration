@@ -129,24 +129,39 @@
     advance(2, 0.1);
 
     const aiProvider = AFR.registry.resolve('ai');
-    let recipe = await attempt(`AI provider (${aiProvider.id})`, () =>
-      U.withTimeout(
+
+    /* Keep the real reason. Falling back to the offline engine changes the
+       answer completely — the model knows any dish, the offline engine knows
+       56 — so "why" is the single most useful thing to tell someone whose
+       recipe came back wrong, and it used to be swallowed into a generic
+       line inside a collapsed section. */
+    let aiError = null;
+    let recipe = null;
+    try {
+      recipe = await U.withTimeout(
         aiProvider.generate(answers, {
           onProgress: (label, fraction) => advance(2, fraction, label),
         }),
         AFR.config.generation.aiTimeoutMs,
-        'Recipe generation'), warnings);
+        'Recipe generation');
+    } catch (err) {
+      aiError = (err && err.message) ? err.message : 'unavailable';
+      warnings.push(`AI provider (${aiProvider.id}): ${aiError}`);
+    }
 
     /* Falling back is a normal outcome, not a crash. */
-    if (!recipe && aiProvider.id !== 'local') {
+    const fellBack = !recipe && aiProvider.id !== 'local';
+    if (fellBack) {
       onStage('generate', 'Falling back to the built-in engine');
       const localProvider = AFR.registry.fallback('ai');
       recipe = await localProvider.generate(answers, {
         onProgress: (label, fraction) => advance(2, fraction, label),
       });
-      warnings.push('The configured AI provider was unavailable, so the built-in engine generated this recipe.');
     }
     if (!recipe) throw new Error('Recipe generation failed and no fallback was available.');
+    if (fellBack) {
+      recipe.meta.aiFallback = { provider: aiProvider.id, reason: aiError || 'unavailable' };
+    }
     sourcesUsed.push(`ai:${recipe.meta.provider}`);
     advance(2, 1);
 

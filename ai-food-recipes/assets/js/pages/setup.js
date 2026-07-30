@@ -24,6 +24,97 @@
      tables, while a hosted model knows the dish. */
   const TESTS = [
     {
+      id: 'sharedModel',
+      name: 'Shared model backend \u2014 run this first if recipes look wrong',
+      what: 'Calls the endpoint in endpoints.ai exactly the way the app does, and prints '
+        + 'what came back. This is the fastest way to tell a working backend from a silent '
+        + 'fallback: if this fails, every recipe quietly comes from the offline engine '
+        + 'instead, which is what makes the app look like it simply gives wrong answers.',
+      keyField: null,
+      where: 'Nothing to paste \u2014 the key lives on the server, not here.',
+      free: 'Depends on the account behind the endpoint.',
+      enables: "providers.ai = 'proxy'",
+      async run() {
+        const url = AFR.config.endpoints.ai;
+        if (!url) throw new Error('No shared backend is configured (AFR.config.endpoints.ai is empty).');
+
+        const lines = [`Endpoint: ${url}`];
+
+        /* Step 1: is anything there at all? A GET should be refused by our
+           worker with a specific message — that alone proves the right code
+           is deployed, before any key is involved. */
+        let reachable = false;
+        try {
+          const probe = await fetch(url, { method: 'GET' });
+          const body = (await probe.text()).slice(0, 200);
+          lines.push(`GET  -> HTTP ${probe.status}  ${body}`);
+          reachable = true;
+          if (/Send a POST request/i.test(body)) {
+            lines.push('   \u2713 the correct worker code is deployed');
+          } else if (/hello world/i.test(body)) {
+            throw new Error('The endpoint is still running Cloudflare\'s "Hello World" placeholder. '
+              + 'The worker.js paste did not take \u2014 redo the Edit code step.');
+          } else {
+            lines.push('   ? unexpected reply \u2014 the deployed code may not be worker.js');
+          }
+        } catch (err) {
+          if (!reachable) {
+            throw new Error(`Could not reach the endpoint at all: ${err.message}. `
+              + 'Check the URL, and that the worker is deployed.');
+          }
+          throw err;
+        }
+
+        /* Step 2: the real thing \u2014 the exact request the wizard sends. */
+        const answers = {
+          dish: 'Kothimbir Vadi', servings: 4, experience: 'intermediate', time: '60',
+          cuisine: 'auto', diet: [], spice: 'medium', sweetness: 'medium', salt: 'normal',
+          oil: 'moderate', style: 'traditional', appliances: ['gas'], available: [],
+          avoid: [], allergies: [], notes: '', language: 'en',
+        };
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            answers,
+            brief: AFR.prompt.brief(answers),
+            system: AFR.prompt.SYSTEM,
+            user: AFR.prompt.build(answers),
+          }),
+        });
+        const raw = await res.text();
+        lines.push(`POST -> HTTP ${res.status}`);
+
+        if (!res.ok) {
+          let hint = '';
+          if (res.status === 500 && /missing its model key/i.test(raw)) {
+            hint = ' \u2014 GROQ_API_KEY is not set. Cloudflare dashboard \u2192 your worker '
+              + '\u2192 Settings \u2192 Variables and Secrets \u2192 Add \u2192 Secret.';
+          } else if (res.status === 403) {
+            hint = ' \u2014 this origin is not in the worker\'s allowedOrigins list.';
+          } else if (res.status === 429) {
+            hint = ' \u2014 rate limited. Wait a minute.';
+          }
+          throw new Error(`${raw.slice(0, 300)}${hint}`);
+        }
+
+        let data;
+        try { data = JSON.parse(raw); } catch (err) {
+          throw new Error(`The reply was not JSON: ${raw.slice(0, 200)}`);
+        }
+        const text = data.text || (data.recipe && JSON.stringify(data.recipe)) || '';
+        if (!text) throw new Error(`The reply had no recipe in it: ${raw.slice(0, 200)}`);
+
+        /* Parse it the way the app does, so a pass here means a pass there. */
+        const recipe = AFR.providers._hydrate(AFR.providers._extractJSON(text), answers);
+        lines.push('   \u2713 the model answered and the recipe parsed');
+        lines.push(`${recipe.name} \u2014 ${recipe.ingredients.length} ingredients, `
+          + `${recipe.preparation.length} prep + ${recipe.steps.length} cooking steps`);
+        lines.push(...recipe.ingredients.slice(0, 5).map((i) => `    ${i.qty} ${i.unit} ${i.name}`));
+        return lines;
+      },
+    },
+    {
       id: 'gemini',
       name: 'Google Gemini — writes the recipe itself',
       what: 'Replaces the built-in offline engine. It knows dishes the keyword '

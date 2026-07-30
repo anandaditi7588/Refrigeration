@@ -144,6 +144,21 @@
     /* If the app does not actually know this dish, say so above the title.
        Placed anywhere lower it reads as a footnote, and people quite
        reasonably take a confident-looking recipe at face value. */
+    /* If the connected model was meant to answer and did not, that is the
+       single most important thing on the page: it is the difference between a
+       recipe for the dish you asked for and one composed from a technique.
+       Silent fallback is what makes the app look like it is simply wrong. */
+    const fallback = recipe.meta.aiFallback;
+    const fallbackBanner = fallback ? `
+      <div class="afr-banner afr-banner--strong" role="alert">
+        <i class="fa-solid fa-plug-circle-xmark" aria-hidden="true"></i>
+        <span><strong>The connected model did not answer, so this came from the
+          built-in engine instead.</strong>
+          That is why the recipe below may not match the dish you asked for.
+          <br><span style="opacity:.85;font-size:.92rem">Reason: ${U.esc(fallback.reason)}</span>
+          <br><a href="setup.html#connect">Check the connection on the Live Data page</a>.</span>
+      </div>` : '';
+
     const unknown = recipe.meta.unknownDish;
     const unknownBanner = unknown ? `
       <div class="afr-banner afr-banner--strong" role="alert">
@@ -159,6 +174,7 @@
       </div>` : '';
 
     header.innerHTML = `
+      ${fallbackBanner}
       ${unknownBanner}
       <p class="afr-eyebrow"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
         Your custom recipe</p>
