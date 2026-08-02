@@ -205,6 +205,20 @@ img { max-width: 100%; display: block; }
    -------------------------------------------------------------------------- */
 .afr-shell { max-width: var(--afr-max-w); margin-inline: auto; padding-inline: var(--afr-space-5); }
 
+/* Nothing may push the page sideways. A single over-wide child gives the whole
+   document a horizontal scrollbar, which on a phone reads as broken — and it
+   was happening at 320px, where a fixed-width card sat 24px past the viewport. */
+html, body { overflow-x: hidden; }
+.afr-shell > * { min-width: 0; }
+
+/* Breathing room at the edges. 24px is right on a laptop and too tight on a
+   phone, where text ends up touching the bezel. */
+@media (max-width: 640px) {
+  .afr-shell { padding-inline: var(--afr-space-4); }
+  .afr-section { padding-block: var(--afr-space-6); }
+  .afr-section--tight { padding-block: var(--afr-space-5); }
+}
+
 .afr-section { padding-block: var(--afr-space-8); }
 .afr-section--tight { padding-block: var(--afr-space-6); }
 

@@ -88,12 +88,26 @@
 
   /** Compact category tile used under the hero. */
   function tile(category) {
+    /* Every tile used to carry the caption "Create with AI". Twelve identical
+       lines of text that told a visitor nothing, distinguished no tile from
+       any other, and cost a line of height each. Where the catalogue actually
+       has recipes for a category, show how many; otherwise show nothing and
+       let the label speak. */
+    const count = (AFR.data.catalog ? AFR.data.catalog.recipes : [])
+      .filter((r) => r.diet === category.id
+        || (r.tags || []).includes(category.id)
+        || (category.id === 'quick' && r.minutes <= 30)).length;
+
+    const kids = [
+      UI.el('span', { class: 'afr-tile__icon', 'aria-hidden': 'true', text: category.emoji }),
+      UI.el('strong', { text: category.label }),
+    ];
+    if (count) kids.push(UI.el('small', { text: `${count} ${count === 1 ? 'idea' : 'ideas'}` }));
+
     return UI.el('a', {
       class: 'afr-tile', href: `create.html?dish=${encodeURIComponent(category.query)}#wizard`,
       'data-reveal': '',
-    }, UI.el('span', { class: 'afr-tile__icon', 'aria-hidden': 'true', text: category.emoji }),
-      UI.el('strong', { text: category.label }),
-      UI.el('small', { text: 'Create with AI' }));
+    }, kids);
   }
 
   /** Render a list of cards into a container, with a skeleton-free fast path. */

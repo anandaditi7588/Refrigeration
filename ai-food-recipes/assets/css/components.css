@@ -127,10 +127,16 @@
 }
 .afr-brand:hover { text-decoration: none; }
 .afr-brand__text { overflow: hidden; text-overflow: ellipsis; }
-/* Below ~420px the wordmark is the first thing to go, so the actions still fit. */
-@media (max-width: 420px) {
-  .afr-brand__text { display: none; }
-  .afr-nav__inner { padding-inline: var(--afr-space-3); gap: var(--afr-space-2); }
+/* The wordmark used to be hidden below 420px, which left a bare orange square
+   as the entire brand on a phone — the one screen where identity matters most
+   because there is nothing else on it. Shrink it instead; it fits. */
+@media (max-width: 480px) {
+  .afr-brand { font-size: 1.05rem; gap: 8px; }
+  .afr-brand__mark { width: 32px; height: 32px; border-radius: 10px; font-size: 0.95rem; }
+  .afr-nav__inner { padding-inline: var(--afr-space-4); gap: var(--afr-space-3); }
+}
+@media (max-width: 360px) {
+  .afr-brand__text { font-size: 0.95rem; }
 }
 .afr-brand__mark {
   width: 38px; height: 38px;
@@ -141,9 +147,15 @@
   font-size: 1.1rem;
   box-shadow: 0 4px 12px rgba(226, 103, 15, 0.35);
 }
-.afr-nav__links { display: flex; align-items: center; gap: 4px; margin-inline: auto; }
+.afr-nav__links {
+  display: flex; align-items: center; gap: 2px; margin-inline: auto;
+  /* A wrapped nav bar is the clearest possible signal that a layout was never
+     checked. Five items fit on one line; keep them there. */
+  flex-wrap: nowrap;
+}
 .afr-nav__link {
-  padding: 8px 14px;
+  padding: 9px 13px;
+  white-space: nowrap;
   border-radius: var(--afr-radius-pill);
   color: var(--afr-text-muted);
   font-weight: 600;
@@ -188,7 +200,14 @@
   gap: var(--afr-space-7);
   align-items: center;
 }
-.afr-hero__title { margin-bottom: var(--afr-space-4); }
+.afr-hero__title {
+  margin-bottom: var(--afr-space-4);
+  /* Without this the last word drops to a line of its own — "recipe." sitting
+     alone under a full line reads as a mistake rather than emphasis. */
+  text-wrap: balance;
+  max-width: 16ch;
+}
+@media (max-width: 960px) { .afr-hero__title { max-width: none; } }
 .afr-hero__title em {
   font-style: normal;
   background: linear-gradient(120deg, var(--afr-brand-500), var(--afr-accent-500));
@@ -201,6 +220,18 @@
 .afr-hero__stats { display: flex; flex-wrap: wrap; gap: var(--afr-space-5); margin-top: var(--afr-space-5); }
 .afr-hero__stat strong { display: block; font-size: 1.6rem; font-family: var(--afr-font-display); }
 .afr-hero__stat span { font-size: 0.85rem; color: var(--afr-text-muted); }
+
+@media (max-width: 640px) {
+  /* Two ragged-width buttons stacked left is the default flex result and it
+     looks accidental. Full width is also a far bigger tap target. */
+  .afr-hero__cta { flex-direction: column; align-items: stretch; }
+  .afr-hero__cta .afr-btn { width: 100%; }
+
+  /* Four stats across wrapped 3 + 1, leaving one orphan on its own row.
+     A fixed two-column grid gives an even 2 x 2. */
+  .afr-hero__stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--afr-space-4); }
+  .afr-hero__stat strong { font-size: 1.4rem; }
+}
 
 /* Floating collage of dish tiles */
 .afr-hero__art { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: var(--afr-space-3); }

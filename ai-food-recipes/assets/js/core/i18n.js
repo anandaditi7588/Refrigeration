@@ -22,6 +22,7 @@
     en: {
       'nav.home': 'Home',
       'nav.categories': 'Categories',
+      'nav.browse': 'Browse',
       'nav.trending': 'Trending',
       'nav.regional': 'Regional',
       'nav.create': 'Create a Dish',
