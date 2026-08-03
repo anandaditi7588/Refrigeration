@@ -51,10 +51,15 @@
       keyUrl: 'https://console.groq.com/keys',
       keyLabel: 'Groq API key',
       free: 'Generous free tier, no card required.',
-      note: 'Runs open-weight models (Llama, Mixtral, Qwen). The fastest option here, '
-        + 'and the one to pick if you would rather not depend on Google or OpenAI.',
+      note: 'Runs open-weight models. The fastest option here, and the one to pick if you '
+        + 'would rather not depend on Google or OpenAI. Press "Load models" for the current '
+        + 'list — hosts retire models regularly and this starting list will drift.',
       recommended: true,
-      models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'],
+      /* mixtral-8x7b-32768 was here and Groq has since retired it, so it sat in
+         the dropdown as a default that could never work. Only models worth
+         defaulting to belong here; "Load models" fetches the live list, which
+         is always more current than anything hard-coded. */
+      models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'],
     },
     {
       id: 'openai',
