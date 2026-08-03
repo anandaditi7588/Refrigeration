@@ -791,7 +791,20 @@
 .afr-actionbar__spacer { margin-left: auto; }
 
 /* Section index (jump links) */
-.afr-jump { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Twenty numbered chips wrapping onto three rows is a wall of navigation
+   before you reach any content. One scrollable row keeps the whole index
+   reachable without it dominating the top of the page. */
+.afr-jump {
+  display: flex; gap: 6px;
+  flex-wrap: nowrap; overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  /* Fade the right edge so it reads as scrollable rather than cut off. */
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%);
+}
+.afr-jump a { flex: 0 0 auto; white-space: nowrap; }
+@media print { .afr-jump { flex-wrap: wrap; overflow: visible; mask-image: none; -webkit-mask-image: none; } }
 .afr-jump a {
   padding: 5px 11px; border-radius: var(--afr-radius-pill);
   border: 1px solid var(--afr-border); background: var(--afr-surface);

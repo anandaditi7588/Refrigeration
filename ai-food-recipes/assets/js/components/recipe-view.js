@@ -56,8 +56,7 @@
             ${chip(recipe.technique.name)}
             ${chip(`Serves ${recipe.servings}`)}
           </div>
-          <h2 style="margin-bottom:10px">${e(recipe.name)}</h2>
-          <p style="color:var(--afr-text-muted)">${e(recipe.description)}</p>
+          <p style="color:var(--afr-text-muted);font-size:1.02rem">${e(recipe.description)}</p>
           <div class="afr-stats" style="margin-top:18px">
             ${stat(U.humanTime(recipe.prepTime), 'Prep time')}
             ${stat(U.humanTime(recipe.cookTime), 'Cook time')}
